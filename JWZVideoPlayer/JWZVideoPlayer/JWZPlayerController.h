@@ -7,77 +7,66 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "JWZPlayer.h"
 
-typedef NS_ENUM(NSInteger, JWZPlayerControllerStatus) {
-    JWZPlayerControllerStopped,
-    JWZPlayerControllerPaused,
-    JWZPlayerControllerPlaying
-};
-
-typedef NS_ENUM(NSInteger, JWZPlayerControllerMode) {
-    JWZPlayerControllerModeNone,
-    JWZPlayerControllerModeWindow,
-    JWZPlayerControllerModeScreen
+typedef NS_ENUM(NSInteger, JWZPlayerControllerDisplayMode) {
+    JWZPlayerControllerDisplayModeNormal,  // 正常模式，全屏播放
+    JWZPlayerControllerDisplayModeEmbedded // 嵌入模式，需要实现代理，指定嵌入的位置
 };
 
 @class JWZPlayerController;
 
+/**
+ *  JWZPlayerControlle 的代理方法
+ */
 @protocol JWZPlayerControllerDelegate <NSObject>
 
-- (void)playerControllerDidStartPlaying:(JWZPlayerController *)playerController;
-- (void)playerControllerDidFinishPlaying:(JWZPlayerController *)playerController;
+@optional
+/**
+ *  正常模式下，当播放器需要被展示时，应该由谁来 Present.
+ *
+ *  @param playerController 需要被 Present 的 JWZPlayerController 对象
+ *
+ *  @return JWZPlayerController的 presentingViewController 。
+ */
+- (UIViewController *)viewContorllerForPresentingPlayerController:(JWZPlayerController *)playerController;
 
-- (void)playerControllerClicked:(JWZPlayerController *)playerController;
+/**
+ *  嵌入模式下，JWZPlayerController 的承载的播放器视图应该被展示在那个视图之上。
+ *
+ *  @param playerController 承载播放视图的 JWZPlayerController 对象。
+ *
+ *  @return 需要展示播放器的视图。
+ */
+- (UIView *)viewForDisplayingEmbeddedPlayer:(JWZPlayerController *)playerController;
+
+/**
+ *  播放器展示状态发生改变时，调用的代理方法。
+ *
+ *  @param playerController 播放器控制器对象。
+ *  @param displayMode      展示方式
+ */
+- (void)playerController:(JWZPlayerController *)playerController shouldDisplayWithMode:(JWZPlayerControllerDisplayMode)displayMode;
 
 @end
 
-@interface JWZPlayerController : UIViewController
-
-/**
- *  接收视频播放事件的代理方法
- */
-@property (nonatomic, weak) id<JWZPlayerControllerDelegate> delegate;
-
-/**
- *  视频的缩略图
- */
-@property (weak, nonatomic) IBOutlet UIImageView *thumbnailImageView;
+@interface JWZPlayerController : UIViewController <JWZPlayerDelegate, UITextViewDelegate>
 
 /**
  *  视频的资源链接
  */
-@property (nonatomic, strong) NSURL *mediaURL;
+@property (nonatomic, strong, readonly) NSURL *mediaURL;
 
-@property (nonatomic, readonly) JWZPlayerControllerStatus status;
-@property (nonatomic, readonly) JWZPlayerControllerMode mode;
+@property (nonatomic, readonly) JWZPlayerControllerDisplayMode displayMode;
+
+@property (nonatomic, weak) id<JWZPlayerControllerDelegate> delegate;
 
 /**
- *  共享的视频播放器。这个播放器在第一次调用后就始终存在。
+ *  播放。
  *
- *  @return 视频播放器控制器
+ *  @param mediaURL 媒体资源的链接。
  */
-+ (instancetype)sharedPlayerController;
-
-/**
- *  把播放器放到视图 playView 上
- *
- *  @param playView 将要放置播放器的视图
- */
-- (void)showPlayerOverView:(UIView *)playView;
-
-/**
- *  将播放器从控制器 viewController 上 present 出来。
- *
- *  @param viewController present 播放器的控制器
- */
-- (void)presentPlayerFromViewController:(UIViewController *)viewController;
-
-- (void)remove;
-
-/**
- *  除非调用此方法，否则播放器不会播放。
- */
-- (void)play;
+- (void)play:(NSURL *)mediaURL displayMode:(JWZPlayerControllerDisplayMode)displayMode;
 
 - (void)pause;
 
