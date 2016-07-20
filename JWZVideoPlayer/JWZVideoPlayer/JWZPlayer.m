@@ -345,7 +345,7 @@ static NSString *const kJWZObservedAVPlayerItemProperties[_JWZNumberOfOberserved
 @implementation JWZPlayerMedia
 
 - (void)dealloc {
-    JWZPlayerDebugLog(@"%f", __func__);
+    JWZPlayerDebugLog(@"%s", __func__);
     if (_playerItem != nil) {
         [self stopObservingAVPlayerItemStatus:_playerItem];
         _playerItem = nil;

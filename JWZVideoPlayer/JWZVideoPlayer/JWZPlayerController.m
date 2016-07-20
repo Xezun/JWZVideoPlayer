@@ -8,18 +8,11 @@
 
 #import "JWZPlayerController.h"
 
-@import AVFoundation;
+static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.25;
 
-@interface _JWZPlayerControlView : UIView
-
-
-@end
-
-@implementation _JWZPlayerControlView
+@interface _JWZPlayerControllerPlaybackControls : UIView <JWZPlayerControllerPlaybackControls>
 
 @end
-
-
 
 @interface JWZPlayerController ()
 
@@ -48,6 +41,26 @@
 
 @implementation JWZPlayerController
 
+- (instancetype)init {
+    self = [super init];
+    if (self != nil) {
+        [self _JWZPlayerControllerDidInitialize];
+    }
+    return self;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder {
+    self = [super initWithCoder:aDecoder];
+    if (self != nil) {
+        [self _JWZPlayerControllerDidInitialize];
+    }
+    return self;
+}
+
+- (void)_JWZPlayerControllerDidInitialize {
+    self.modalPresentationStyle = UIModalPresentationOverCurrentContext;
+}
+
 //- (void)dealloc {
 //    if (_timer != nil) {
 //        [_timer invalidate];
@@ -70,12 +83,16 @@
     [self.view addGestureRecognizer:tap];
 }
 
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+}
+
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
-    // 收到内存警告时，如果没有在播放，就释放调当前资源
-    // if (![self isPlaying]) {
-    //     self.player.currentMedia.resourceURL = nil;
-    // }
 }
 
 /*
@@ -91,32 +108,6 @@
 - (JWZPlayer *)player {
     return (JWZPlayer *)self.view;
 }
-//- (JWZPlayer *)player {
-//    if (_player != nil) {
-//        return _player;
-//    }
-//    JWZPlayerMedia *playerMedia = [[JWZPlayerMedia alloc] init];
-//    playerMedia.resourceURL = self.mediaURL;
-//    JWZPlayer *player = [[JWZPlayer alloc] initWithFrame:self.playerWrapperView.bounds];
-//    player.backgroundColor = [UIColor blackColor];
-//    player.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-//    [self.playerWrapperView insertSubview:player atIndex:0];
-//    
-////    player.translatesAutoresizingMaskIntoConstraints = NO;
-////    NSArray *constraints1 = [NSLayoutConstraint constraintsWithVisualFormat:@"H:|[player]|"
-////                                                                    options:(NSLayoutFormatAlignAllLeft)
-////                                                                    metrics:nil
-////                                                                      views:NSDictionaryOfVariableBindings(player)];
-////    NSArray *constraints2 = [NSLayoutConstraint constraintsWithVisualFormat:@"V:|[player]|"
-////                                                                    options:(NSLayoutFormatAlignAllLeft)
-////                                                                    metrics:nil
-////                                                                      views:NSDictionaryOfVariableBindings(player)];
-////    [self.playerWrapperView addConstraints:constraints1];
-////    [self.playerWrapperView addConstraints:constraints2];
-//    
-//    [self setPlayer:player];
-//    return _player;
-//}
 
 //- (void)setTimer:(NSTimer *)timer {
 //    if (_timer != timer) {
@@ -138,10 +129,6 @@
         }
         self.player.media = media;
     }
-}
-
-- (void)setDisplayMode:(JWZPlayerControllerDisplayMode)displayMode {
-    _displayMode = displayMode;
 }
 
 /**
@@ -178,104 +165,115 @@
 //    }];
 }
 
-#pragma mark - Custom Methods
+#pragma mark - Private Methods
 
-- (void)play:(NSURL *)mediaURL displayMode:(JWZPlayerControllerDisplayMode)displayMode {
-    self.mediaURL = mediaURL;
-    self.displayMode = displayMode;
+- (void)_JWZPlayerController_displayPlayerOverView:(UIView *)view animated:(BOOL)animated {
+    if (self.presentingViewController != nil) {  // 当前是全屏模式
+        if (self.presentingViewController.view.window == view.window) {  // 处于同一个 window
+            [UIView animateWithDuration:kJWZPlayerControllerAnimationDefaultDuration animations:^{
+                // 把播放器缩放到目的视图的位置
+                self.view.frame = [view.superview convertRect:view.frame toView:view.window];
+            } completion:^(BOOL finished) {
+                [self dismissViewControllerAnimated:NO completion:^{
+                    // 将播放器放到目的视图上
+                    self.view.frame = view.bounds;
+                    [view addSubview:self.view];
+                }];
+            }];
+        } else {
+            [self dismissViewControllerAnimated:NO completion:^{
+                self.view.frame = view.bounds;
+                [view addSubview:self.view];
+            }];
+        }
+    } else { // 当前是窗口嵌入模式
+        if (self.view.window == view.window) { // 如果播放器开始所处 window 与目的视图 window 相同
+            // 将播放器放到 window 上
+            self.view.frame = [self.view.superview convertRect:self.view.frame toView:self.view.window];
+            [self.view.window addSubview:self.view];
+            
+            [UIView animateWithDuration:kJWZPlayerControllerAnimationDefaultDuration animations:^{
+                // 将播放器移动到目的视图位置
+                self.view.frame = [view.superview convertRect:view.frame toView:view.window];
+            } completion:^(BOOL finished) {
+                // 将播放器放置到目的视图
+                self.view.frame = view.bounds;
+                [view addSubview:self.view];
+            }];
+        } else { // window 不相同
+            self.view.frame = view.bounds;
+            [view addSubview:self.view];
+        }
+    }
     
+}
+
+- (void)_JWZPlayerController_presentPlayerFromController:(UIViewController *)viewController animated:(BOOL)animated {
+    viewController.definesPresentationContext = YES;
+    if (self.presentingViewController == nil) { // 嵌入模式
+        // 将播放器放到 window 上
+        if (self.view.superview != nil) {
+            self.view.frame = [self.view.superview convertRect:self.view.frame toView:self.view.window];
+            [self.view.window addSubview:self.view];
+        }
+        
+        [UIView animateWithDuration:kJWZPlayerControllerAnimationDefaultDuration animations:^{
+            // 背景变黑并缩放到全屏
+            self.view.backgroundColor = [UIColor blackColor];
+            self.view.frame = self.view.window.bounds;
+        } completion:^(BOOL finished) {
+            // Present播放器控制器
+            [viewController presentViewController:self animated:NO completion:NULL];
+        }];
+    } else if (self.presentingViewController != viewController) { // 已经是全屏状态
+        if (self.view.window != viewController.view.window) { // 只有在不同的 window 上才能操作
+            [self.presentingViewController dismissViewControllerAnimated:NO completion:^{
+                [viewController presentViewController:self animated:animated completion:NULL];
+            }];
+        }
+    }
+}
+
+#pragma mark - Public Methods
+
+- (void)play {
+    [self.player play];
+}
+
+- (void)playWithMediaURL:(NSURL *)mediaURL displayMode:(JWZPlayerControllerDisplayMode)displayMode {
+    self.mediaURL = mediaURL;
+    [self play];
+}
+
+- (void)display:(JWZPlayerControllerDisplayMode)displayMode animated:(BOOL)animated {
+    self.displayMode = displayMode;
+    [self display:animated];
+}
+
+- (void)display:(BOOL)animated {
     switch (_displayMode) {
         case JWZPlayerControllerDisplayModeNormal: {
             UIViewController *presentingVC = nil;
-            if (self.delegate != nil && [self.delegate respondsToSelector:@selector(viewContorllerForPresentingPlayerController:)]) {
-                presentingVC = [self.delegate viewContorllerForPresentingPlayerController:self];
+            if (self.delegate != nil && [self.delegate respondsToSelector:@selector(viewControllerForPresentingPlayerController:)]) {
+                presentingVC = [self.delegate viewControllerForPresentingPlayerController:self];
             } else {
                 presentingVC = [UIApplication sharedApplication].keyWindow.rootViewController;
             }
-            if (self.presentingViewController != nil) {
-                if (self.presentingViewController != presentingVC) {
-                    [self dismissViewControllerAnimated:YES completion:^{
-                        [presentingVC presentViewController:self animated:YES completion:^{
-                            [self.player play];
-                        }];
-                    }];
-                }
-            } else {
-                if (self.view.superview != nil) {
-                    self.view.frame = [self.view.superview convertRect:self.view.frame toView:self.view.window];
-                    [self.view.window addSubview:self.view];
-                    [UIView animateWithDuration:0.25 animations:^{
-                        self.view.frame = self.view.window.bounds;
-                    } completion:^(BOOL finished) {
-                        [presentingVC presentViewController:self animated:NO completion:^{
-                            [self.player play];
-                        }];
-                    }];
-                } else {
-                    [presentingVC presentViewController:self animated:YES completion:^{
-                        [self.player play];
-                    }];
-                }
-            }
+            [self _JWZPlayerController_presentPlayerFromController:presentingVC animated:animated];
             break;
         }
         case JWZPlayerControllerDisplayModeEmbedded: {
             if (self.delegate != nil && [self.delegate respondsToSelector:@selector(viewForDisplayingEmbeddedPlayer:)]) {
-                UIView *containerView = [self.delegate viewForDisplayingEmbeddedPlayer:self];
-                if (self.presentingViewController != nil) {
-                    [self dismissViewControllerAnimated:NO completion:^{
-                        [containerView.window addSubview:self.view];
-                        CGRect frame = [containerView.superview convertRect:containerView.frame toView:containerView.window];
-                        [UIView animateWithDuration:0.25 animations:^{
-                            self.view.frame = frame;
-                        } completion:^(BOOL finished) {
-                            self.view.frame = containerView.bounds;
-                            [containerView addSubview:self.view];
-                            [self.player play];
-                        }];
-                    }];
-                } else {
-                    if (self.view.superview == nil) {
-                        self.view.frame = containerView.bounds;
-                        [containerView addSubview:self.view];
-                        [self.player play];
-                    } else if (self.view.superview != containerView) {
-                        self.view.frame = [self.view.superview convertRect:self.view.frame toView:self.view.window];
-                        [containerView.window addSubview:self.view];
-                        CGRect frame = [containerView.superview convertRect:containerView.frame toView:containerView.window];
-                        [UIView animateWithDuration:0.25 animations:^{
-                            self.view.frame = frame;
-                        } completion:^(BOOL finished) {
-                            self.view.frame = containerView.bounds;
-                            [containerView addSubview:self.view];
-                            [self.player play];
-                        }];
-                    }
-                }
+                UIView *view = [self.delegate viewForDisplayingEmbeddedPlayer:self];
+                [self _JWZPlayerController_displayPlayerOverView:view animated:animated];
+            } else {
+                [self display:(JWZPlayerControllerDisplayModeNormal) animated:animated];
             }
             break;
         }
+        default:
+            break;
     }
-    
-//    if (_status == JWZPlayerControllerStopped) {
-//        if (self.mediaURL != nil) {
-//            _status = JWZPlayerControllerPlaying;
-//            if (self.player.media != nil) {
-//                self.player.media.resourceURL = self.mediaURL;
-//            } else {
-//                JWZPlayerMedia *media = [[JWZPlayerMedia alloc] init];
-//                media.resourceURL = self.mediaURL;
-//                self.player.media = media;
-//            }
-//            [self.activityIndicatorView startAnimating];
-//            self.thumbnailImageView.hidden = NO;
-//            [self.player play];
-//        }
-//    } else if (_status == JWZPlayerControllerPaused) {
-//        _status = JWZPlayerControllerPlaying;
-//        [[self player] play];
-//        [[self timer] setFireDate:[NSDate distantPast]];
-//    }
 }
 
 - (void)pause {
@@ -289,90 +287,6 @@
 
 - (void)stop {
     [self.player stop];
-}
-
-- (void)playInView:(UIView *)view {
-    _displayMode = JWZPlayerControllerDisplayModeEmbedded;
-    UIViewController *presentingViewController = [self presentingViewController];
-    if (presentingViewController != nil) {
-//        __weak typeof(self) weakSelf = self;
-//        BOOL needContinuePlaying = NO;
-//        if (_status == JWZPlayerControllerPlaying) {
-//            [self pause];
-//            needContinuePlaying = YES;
-//        }
-        [self dismissViewControllerAnimated:NO completion:^{
-            self.view.frame = view.bounds;
-            [view addSubview:self.view];
-//            self.playerWrapperView.frame = playView.bounds;
-//            [playView addSubview:self.playerWrapperView];
-//            [weakSelf setProgressOfBuffer:weakSelf.progressOfBuffer];
-//            [weakSelf setProgressOfPlaying:weakSelf.progressOfPlaying];
-//            if (needContinuePlaying) {
-//                [weakSelf play];
-//            }
-        }];
-    } else {
-        self.view.frame = view.bounds;
-        [view addSubview:self.view];
-//        self.playerWrapperView.frame = playView.bounds;
-//        [playView addSubview:self.playerWrapperView];
-    }
-}
-
-- (void)presentPlayerFromViewController:(UIViewController *)viewController {
-    _displayMode = JWZPlayerControllerDisplayModeNormal;
-//    viewController.definesPresentationContext = YES;
-//    self.modalPresentationStyle = UIModalPresentationOverCurrentContext;
-    [viewController presentViewController:self animated:NO completion:^{
-        
-    }];
-//    if (self.view.superview != nil) {
-//
-//        
-//        BOOL needContinuePlaying = NO;
-//        if (_status == JWZPlayerControllerPlaying) {
-//            [self pause];
-//            needContinuePlaying = YES;
-//        }
-//        CGRect frame = [self.playerWrapperView.superview.superview convertRect:self.playerWrapperView.superview.frame toView:self.playerWrapperView.superview.window];
-//        [self.playerWrapperView removeFromSuperview];
-//        
-//        self.view.backgroundColor = [UIColor clearColor];
-//        viewController.definesPresentationContext = YES;
-//        self.modalPresentationStyle               = UIModalPresentationOverCurrentContext;
-//        __weak typeof(self) weakSelf = self;
-//        [viewController presentViewController:self animated:NO completion:^{
-//            // 把播放器添加到当前控制器
-//            weakSelf.playerWrapperView.frame = frame;
-//            [weakSelf.view addSubview:weakSelf.playerWrapperView];
-//            CGRect newFrame = AVMakeRectWithAspectRatioInsideRect(frame.size, weakSelf.view.bounds);
-//            // 把背景变黑，同时放大到中间
-//            [UIView animateWithDuration:0.5 animations:^{
-//                weakSelf.view.backgroundColor    = [UIColor blackColor];
-//                weakSelf.playerWrapperView.frame = newFrame;
-//            } completion:^(BOOL finished) {
-//                // 是否自动开始
-//                [weakSelf setProgressOfBuffer:weakSelf.progressOfBuffer];
-//                [weakSelf setProgressOfPlaying:weakSelf.progressOfPlaying];
-//                if (needContinuePlaying) {
-//                    [weakSelf play];
-//                }
-//            }];
-//        }];
-//    } else {
-//        self.playerWrapperView.frame = self.view.bounds;
-//        [self.view addSubview:self.playerWrapperView];
-//        [viewController presentViewController:self animated:NO completion:NULL];
-//    }
-}
-
-- (void)remove {
-//    if (self.presentingViewController != nil) {
-//        [self dismissViewControllerAnimated:NO completion:NULL];
-//    } else if (self.playerWrapperView.superview != self.view) {
-//        [self.playerWrapperView removeFromSuperview];
-//    }
 }
 
 #pragma mark - <JWZPlayerDelegate>
@@ -453,11 +367,76 @@
 
 - (void)tapAction:(id)sender {
     if (self.displayMode == JWZPlayerControllerDisplayModeNormal) {
-        [self play:self.mediaURL displayMode:(JWZPlayerControllerDisplayModeEmbedded)];
+        [self display:(JWZPlayerControllerDisplayModeEmbedded) animated:YES];
     } else {
-        [self play:self.mediaURL displayMode:(JWZPlayerControllerDisplayModeNormal)];
+        [self display:(JWZPlayerControllerDisplayModeNormal) animated:YES];
     }
 }
 
+
+@end
+
+static UIImage *UIImageFromJWZPlayerBundle(NSString *imageName) {
+    NSString *imageFullName = [NSString stringWithFormat:@"JWZPlayer/%@", imageName];
+    return [UIImage imageNamed:imageFullName];
+}
+
+@implementation _JWZPlayerControllerPlaybackControls
+
+- (instancetype)initWithFrame:(CGRect)frame {
+    self = [super initWithFrame:frame];
+    if (self != nil) {
+        [self _JWZPlayerControllerPlaybackControls_viewDidInitialize];
+    }
+    return self;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder {
+    self = [super initWithCoder:aDecoder];
+    if (self != nil) {
+        [self _JWZPlayerControllerPlaybackControls_viewDidInitialize];
+    }
+    return self;
+}
+
+- (void)_JWZPlayerControllerPlaybackControls_viewDidInitialize {
+    // 底部控制条
+    UIView *toolBar = [[UIView alloc] init];
+    toolBar.backgroundColor = [UIColor colorWithWhite:0 alpha:0.5];
+    [self addSubview:toolBar];
+    {
+        toolBar.translatesAutoresizingMaskIntoConstraints = NO;
+        NSArray *consts1 = [NSLayoutConstraint constraintsWithVisualFormat:@"H:|[toolBar]|" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(toolBar)];
+        NSArray *consts2 = [NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolBar(==44)]|" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(toolBar)];
+        [self addConstraints:consts1];
+        [self addConstraints:consts2];
+    }
+    
+    // 播放按钮
+    UIButton *playButton = [[UIButton alloc] init];
+    [playButton setImage:UIImageFromJWZPlayerBundle(@"icon-btn-play") forState:(UIControlStateNormal)];
+    [toolBar addSubview:playButton];
+    {
+        playButton.translatesAutoresizingMaskIntoConstraints = NO;
+        NSArray *consts1 = [NSLayoutConstraint constraintsWithVisualFormat:@"H:|[playButton(==44)]" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(playButton)];
+        NSArray *consts2 = [NSLayoutConstraint constraintsWithVisualFormat:@"V:|[playButton]|" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(playButton)];
+        [toolBar addConstraints:consts1];
+        [toolBar addConstraints:consts2];
+    }
+    
+    UIButton *zoomButton = [[UIButton alloc] init];
+    [zoomButton setImage:UIImageFromJWZPlayerBundle(@"icon-btn-zoomin") forState:(UIControlStateNormal)];
+    [zoomButton setImage:UIImageFromJWZPlayerBundle(@"icon-btn-zoomout") forState:(UIControlStateSelected)];
+    [toolBar addSubview:zoomButton];
+    {
+        zoomButton.translatesAutoresizingMaskIntoConstraints = NO;
+        NSArray *consts1 = [NSLayoutConstraint constraintsWithVisualFormat:@"H:[zoomButton(==44)]|" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(zoomButton)];
+        NSArray *consts2 = [NSLayoutConstraint constraintsWithVisualFormat:@"V:|[zoomButton]|" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(zoomButton)];
+        [toolBar addConstraints:consts1];
+        [toolBar addConstraints:consts2];
+    }
+    
+    
+}
 
 @end

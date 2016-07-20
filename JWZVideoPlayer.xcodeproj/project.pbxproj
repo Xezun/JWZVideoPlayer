@@ -19,6 +19,7 @@
 		3161DBC31C954E3900F67B29 /* JWZPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 3161DBC21C954E3900F67B29 /* JWZPlayer.m */; };
 		3161DBC61C954EDB00F67B29 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3161DBC41C954EDB00F67B29 /* AVFoundation.framework */; };
 		3161DBC71C954EDB00F67B29 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3161DBC51C954EDB00F67B29 /* AVKit.framework */; };
+		C41476691D3F5CB0006FE7FB /* JWZPlayer.bundle in Resources */ = {isa = PBXBuildFile; fileRef = C41476681D3F5CB0006FE7FB /* JWZPlayer.bundle */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,6 +43,7 @@
 		3161DBC21C954E3900F67B29 /* JWZPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JWZPlayer.m; sourceTree = "<group>"; };
 		3161DBC41C954EDB00F67B29 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		3161DBC51C954EDB00F67B29 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
+		C41476681D3F5CB0006FE7FB /* JWZPlayer.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = JWZPlayer.bundle; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -119,6 +121,7 @@
 				3161DBBD1C954E0500F67B29 /* JWZPlayerController.m */,
 				3161DBC11C954E3900F67B29 /* JWZPlayer.h */,
 				3161DBC21C954E3900F67B29 /* JWZPlayer.m */,
+				C41476681D3F5CB0006FE7FB /* JWZPlayer.bundle */,
 			);
 			path = JWZVideoPlayer;
 			sourceTree = "<group>";
@@ -180,6 +183,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C41476691D3F5CB0006FE7FB /* JWZPlayer.bundle in Resources */,
 				3161DBB41C954DB600F67B29 /* LaunchScreen.storyboard in Resources */,
 				3161DBB11C954DB600F67B29 /* Assets.xcassets in Resources */,
 				3161DBAF1C954DB600F67B29 /* Main.storyboard in Resources */,

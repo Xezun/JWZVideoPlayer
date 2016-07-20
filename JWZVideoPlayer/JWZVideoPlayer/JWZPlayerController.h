@@ -23,57 +23,104 @@ typedef NS_ENUM(NSInteger, JWZPlayerControllerDisplayMode) {
 
 @optional
 /**
- *  正常模式下，当播放器需要被展示时，应该由谁来 Present.
+ *  当 JWZPlayerController 需要在正常模式下呈现播放器时，会通过此代理方法获取它的 presentingViewController。如果此代理方法没有实现，默认当前 keywindow 的根控制器。
  *
- *  @param playerController 需要被 Present 的 JWZPlayerController 对象
+ *  @param playerController 播放器控制器 JWZPlayerController 对象。
  *
  *  @return JWZPlayerController的 presentingViewController 。
  */
-- (UIViewController *)viewContorllerForPresentingPlayerController:(JWZPlayerController *)playerController;
+- (nonnull UIViewController *)viewControllerForPresentingPlayerController:(JWZPlayerController * _Nonnull)playerController;
 
 /**
- *  嵌入模式下，JWZPlayerController 的承载的播放器视图应该被展示在那个视图之上。
+ *  当以嵌入模式呈现播放器时，JWZPlayerController 将通过此方法获取播放器要嵌入的位置。如果此代理方法没有实现，则呈现方式转换为普通模式。
  *
- *  @param playerController 承载播放视图的 JWZPlayerController 对象。
+ *  @param playerController 播放器控制器 JWZPlayerController 对象。
  *
- *  @return 需要展示播放器的视图。
+ *  @return 播放器将要嵌入的视图，即也是播放器的 superview 。
  */
-- (UIView *)viewForDisplayingEmbeddedPlayer:(JWZPlayerController *)playerController;
+- (nonnull UIView *)viewForDisplayingEmbeddedPlayer:(JWZPlayerController * _Nonnull)playerController;
 
 /**
- *  播放器展示状态发生改变时，调用的代理方法。
+ *  当 JWZPlayerController 要改变播放器的呈现方式时，会调用此方法询问，是否允许改变呈现方式。如果此代理方法没有实现，则默认允许。
  *
- *  @param playerController 播放器控制器对象。
- *  @param displayMode      展示方式
+ *  @param playerController 播放器控制器 JWZPlayerController 对象。
+ *  @param displayMode      将要改变的呈现方式。
+ *
+ *  @return YES 允许，NO 不允许。
  */
-- (void)playerController:(JWZPlayerController *)playerController shouldDisplayWithMode:(JWZPlayerControllerDisplayMode)displayMode;
+- (BOOL)playerController:(JWZPlayerController * _Nonnull)playerController shouldDisplayWithMode:(JWZPlayerControllerDisplayMode)displayMode;
 
 @end
 
-@interface JWZPlayerController : UIViewController <JWZPlayerDelegate, UITextViewDelegate>
 
 /**
- *  视频的资源链接
+ *  播放器控制器
  */
-@property (nonatomic, strong, readonly) NSURL *mediaURL;
+@interface JWZPlayerController : UIViewController <JWZPlayerDelegate>
 
-@property (nonatomic, readonly) JWZPlayerControllerDisplayMode displayMode;
+/**
+ *  视频的资源链接。
+ */
+@property (nonatomic, strong, readonly, nullable) NSURL *mediaURL;
 
-@property (nonatomic, weak) id<JWZPlayerControllerDelegate> delegate;
+/**
+ *  JWZPlayerController 呈现播放器的模式。
+ */
+@property (nonatomic) JWZPlayerControllerDisplayMode displayMode;
+
+/**
+ *  控制器的代理。
+ */
+@property (nonatomic, weak, nullable) id<JWZPlayerControllerDelegate> delegate;
+
+/**
+ *  如果实现了相应的代理方法，调用此方法，JWZPlayerController 将按照指定的模式呈现播放器。
+ *
+ *  @param displayMode 播放器的呈现模式。
+ *  @param animated    是否开启动画效果。
+ */
+- (void)display:(JWZPlayerControllerDisplayMode)displayMode animated:(BOOL)animated;
+
+/**
+ *  呈现播放器。你需要调用此方法才能显示播放器。
+ *
+ *  @param animated 是否展示动画效果。
+ */
+- (void)display:(BOOL)animated;
 
 /**
  *  播放。
  *
- *  @param mediaURL 媒体资源的链接。
+ *  @param mediaURL 要播放的媒体资源地址。
  */
-- (void)play:(NSURL *)mediaURL displayMode:(JWZPlayerControllerDisplayMode)displayMode;
+/**
+ *  播放。
+ *
+ *  @param mediaURL    媒体资源
+ *  @param displayMode 呈现模式
+ */
+- (void)playWithMediaURL:(NSURL * _Nullable)mediaURL displayMode:(JWZPlayerControllerDisplayMode)displayMode;
 
+/**
+ *  播放。纯粹的播放，如果当前已经开始播放，则不会进行任何操作。
+ */
+- (void)play;
+
+/**
+ *  暂停播放。
+ */
 - (void)pause;
 
 /**
  *  停止播放
  */
 - (void)stop;
+
+@end
+
+@protocol JWZPlayerControllerPlaybackControls <NSObject>
+
+@optional
 
 
 
