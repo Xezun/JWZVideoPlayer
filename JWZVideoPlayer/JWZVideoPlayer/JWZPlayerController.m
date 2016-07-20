@@ -12,6 +12,8 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.25;
 
 @interface _JWZPlayerControllerPlaybackControls : UIView <JWZPlayerControllerPlaybackControls>
 
+@property (nonatomic, weak) JWZPlayerController *playerController;
+
 @end
 
 @interface JWZPlayerController ()
@@ -79,8 +81,12 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.25;
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapAction:)];
-    [self.view addGestureRecognizer:tap];
+    _JWZPlayerControllerPlaybackControls *controls = [[_JWZPlayerControllerPlaybackControls alloc] init];
+    controls.playerController = self;
+    self.playbackControls = controls;
+    
+//    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(tapAction:)];
+//    [self.view addGestureRecognizer:tap];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -131,6 +137,27 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.25;
     }
 }
 
+- (void)setPlaybackControls:(__kindof UIView<JWZPlayerControllerPlaybackControls> *)playbackControls {
+    if (_playbackControls != playbackControls) {
+        if (_playbackControls != nil) {
+            [_playbackControls removeFromSuperview];
+        }
+        _playbackControls = playbackControls;
+        if (_playbackControls != nil) {
+//            _playbackControls.frame = self.view.bounds;
+            [self.view addSubview:_playbackControls];
+//            _playbackControls.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
+            _playbackControls.translatesAutoresizingMaskIntoConstraints = NO;
+            NSArray *consts1 = [NSLayoutConstraint constraintsWithVisualFormat:@"H:|[_playbackControls]|" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(_playbackControls)];
+            NSArray *consts2 = [NSLayoutConstraint constraintsWithVisualFormat:@"V:|[_playbackControls]|" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(_playbackControls)];
+            [self.view addConstraints:consts1];
+            [self.view addConstraints:consts2];
+        }
+    }
+}
+
+
+
 /**
  *  设置进度刷新时间的同时，创建 timer。
  */
@@ -173,6 +200,7 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.25;
             [UIView animateWithDuration:kJWZPlayerControllerAnimationDefaultDuration animations:^{
                 // 把播放器缩放到目的视图的位置
                 self.view.frame = [view.superview convertRect:view.frame toView:view.window];
+                [self.view layoutIfNeeded];
             } completion:^(BOOL finished) {
                 [self dismissViewControllerAnimated:NO completion:^{
                     // 将播放器放到目的视图上
@@ -194,6 +222,7 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.25;
             
             [UIView animateWithDuration:kJWZPlayerControllerAnimationDefaultDuration animations:^{
                 // 将播放器移动到目的视图位置
+                [self.view layoutIfNeeded];
                 self.view.frame = [view.superview convertRect:view.frame toView:view.window];
             } completion:^(BOOL finished) {
                 // 将播放器放置到目的视图
@@ -219,8 +248,8 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.25;
         
         [UIView animateWithDuration:kJWZPlayerControllerAnimationDefaultDuration animations:^{
             // 背景变黑并缩放到全屏
-            self.view.backgroundColor = [UIColor blackColor];
             self.view.frame = self.view.window.bounds;
+            [self.view layoutIfNeeded];
         } completion:^(BOOL finished) {
             // Present播放器控制器
             [viewController presentViewController:self animated:NO completion:NULL];
@@ -243,6 +272,7 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.25;
 - (void)playWithMediaURL:(NSURL *)mediaURL displayMode:(JWZPlayerControllerDisplayMode)displayMode {
     self.mediaURL = mediaURL;
     [self play];
+    [self display:displayMode animated:NO];
 }
 
 - (void)display:(JWZPlayerControllerDisplayMode)displayMode animated:(BOOL)animated {
@@ -278,6 +308,9 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.25;
 
 - (void)pause {
     [self.player pause];
+    if (self.playbackControls != nil) {
+        [self.playbackControls playerControllerDidPausePlaying:self];
+    }
 //    if (_status == JWZPlayerControllerPlaying) {
 //        _status = JWZPlayerControllerPaused;
 //        [self.player pause];
@@ -293,7 +326,10 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.25;
 
 // 已经开始播放
 - (void)playerDidStartPlaying:(JWZPlayer *)player {
-//     NSLog(@"%s", __func__);
+    if (self.playbackControls != nil) {
+        [self.playbackControls playerController:self didStartPlayingMediaWithDuration:player.media.duration];
+    }
+     NSLog(@"%s", __func__);
 //    [self.activityIndicatorView stopAnimating];  // 停止活动指示器
 //    self.thumbnailImageView.hidden = YES;       // 隐藏缩略图
 //    NSTimeInterval timeInterval = player.media.duration / CGRectGetWidth(self.progressWrapperView.bounds);
@@ -322,6 +358,9 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.25;
 
 // 播放完成
 - (void)playerDidFinishPlaying:(JWZPlayer *)player {
+    if (self.playbackControls != nil) {
+        [self.playbackControls playerControllerDidFinishPlaying:self];
+    }
 //     NSLog(@"%s", __func__);
 //    [self stop];
 //    if (self.delegate != nil) {
@@ -338,10 +377,11 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.25;
 //    }
 }
 
-// 缓冲进度
-- (void)player:(JWZPlayer *)player mediaBufferDidChange:(CGFloat)progress {
-     NSLog(@"%s, %f", __func__, progress);
-    [self setProgressOfBuffer:progress];
+- (void)player:(JWZPlayer *)player didBufferMediaWithProgress:(CGFloat)progress {
+    NSLog(@"%s, %f", __func__, progress);
+    if (self.playbackControls != nil) {
+        [self.playbackControls playerController:self didBufferMediaWithProgress:progress];
+    }
 }
 
 // 播放不连续
@@ -376,17 +416,35 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.25;
 
 @end
 
+@interface _JWZProgressSliderView : UIProgressView
+
+@property (nonatomic, weak) UISlider *slider;
+
+@end
+
+
+#pragma mark - Privite View Implementation
+
 static UIImage *UIImageFromJWZPlayerBundle(NSString *imageName) {
-    NSString *imageFullName = [NSString stringWithFormat:@"JWZPlayer/%@", imageName];
+    NSString *imageFullName = [NSString stringWithFormat:@"JWZPlayer.bundle/%@", imageName];
     return [UIImage imageNamed:imageFullName];
 }
+
+@interface _JWZPlayerControllerPlaybackControls ()
+
+@property (nonatomic, weak) UIButton *playButton;
+@property (nonatomic, weak) UIButton *zoomButton;
+@property (nonatomic, weak) UILabel *durationLabel;
+@property (nonatomic, weak) _JWZProgressSliderView *progressSliderView;
+
+@end
 
 @implementation _JWZPlayerControllerPlaybackControls
 
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self != nil) {
-        [self _JWZPlayerControllerPlaybackControls_viewDidInitialize];
+        [self _viewDidInitialize];
     }
     return self;
 }
@@ -394,12 +452,23 @@ static UIImage *UIImageFromJWZPlayerBundle(NSString *imageName) {
 - (instancetype)initWithCoder:(NSCoder *)aDecoder {
     self = [super initWithCoder:aDecoder];
     if (self != nil) {
-        [self _JWZPlayerControllerPlaybackControls_viewDidInitialize];
+        [self _viewDidInitialize];
     }
     return self;
 }
 
-- (void)_JWZPlayerControllerPlaybackControls_viewDidInitialize {
+- (void)setFrame:(CGRect)frame {
+    [super setFrame:frame];
+    [self layoutIfNeeded];
+}
+
+- (void)setBounds:(CGRect)bounds {
+    [super setBounds:bounds];
+    [self layoutIfNeeded];
+}
+
+- (void)_viewDidInitialize {
+    CGFloat height = 30.0;
     // 底部控制条
     UIView *toolBar = [[UIView alloc] init];
     toolBar.backgroundColor = [UIColor colorWithWhite:0 alpha:0.5];
@@ -407,7 +476,7 @@ static UIImage *UIImageFromJWZPlayerBundle(NSString *imageName) {
     {
         toolBar.translatesAutoresizingMaskIntoConstraints = NO;
         NSArray *consts1 = [NSLayoutConstraint constraintsWithVisualFormat:@"H:|[toolBar]|" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(toolBar)];
-        NSArray *consts2 = [NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolBar(==44)]|" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(toolBar)];
+        NSArray *consts2 = [NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolBar(==height)]|" options:(NSLayoutFormatAlignAllLeft) metrics:@{@"height": @(height)} views:NSDictionaryOfVariableBindings(toolBar)];
         [self addConstraints:consts1];
         [self addConstraints:consts2];
     }
@@ -415,6 +484,7 @@ static UIImage *UIImageFromJWZPlayerBundle(NSString *imageName) {
     // 播放按钮
     UIButton *playButton = [[UIButton alloc] init];
     [playButton setImage:UIImageFromJWZPlayerBundle(@"icon-btn-play") forState:(UIControlStateNormal)];
+    [playButton setImage:UIImageFromJWZPlayerBundle(@"icon-btn-pause") forState:(UIControlStateSelected)];
     [toolBar addSubview:playButton];
     {
         playButton.translatesAutoresizingMaskIntoConstraints = NO;
@@ -423,7 +493,9 @@ static UIImage *UIImageFromJWZPlayerBundle(NSString *imageName) {
         [toolBar addConstraints:consts1];
         [toolBar addConstraints:consts2];
     }
+    [playButton addTarget:self action:@selector(playButtonAction:) forControlEvents:(UIControlEventTouchUpInside)];
     
+    // 全屏按钮
     UIButton *zoomButton = [[UIButton alloc] init];
     [zoomButton setImage:UIImageFromJWZPlayerBundle(@"icon-btn-zoomin") forState:(UIControlStateNormal)];
     [zoomButton setImage:UIImageFromJWZPlayerBundle(@"icon-btn-zoomout") forState:(UIControlStateSelected)];
@@ -435,8 +507,137 @@ static UIImage *UIImageFromJWZPlayerBundle(NSString *imageName) {
         [toolBar addConstraints:consts1];
         [toolBar addConstraints:consts2];
     }
+    [zoomButton addTarget:self action:@selector(zoomButtonAction:) forControlEvents:(UIControlEventTouchUpInside)];
     
+    // 进度条容器
+    UIView *progressWrapperView = [[UIView alloc] init];
+    [toolBar addSubview:progressWrapperView];
+    {
+        progressWrapperView.translatesAutoresizingMaskIntoConstraints = NO;
+        NSLayoutConstraint *const1 = [NSLayoutConstraint constraintWithItem:progressWrapperView attribute:(NSLayoutAttributeWidth) relatedBy:(NSLayoutRelationEqual) toItem:toolBar attribute:(NSLayoutAttributeWidth) multiplier:1.0 constant:-80.0];
+        const1.priority = UILayoutPriorityDefaultHigh;
+        NSLayoutConstraint *const2 = [NSLayoutConstraint constraintWithItem:progressWrapperView attribute:(NSLayoutAttributeWidth) relatedBy:(NSLayoutRelationGreaterThanOrEqual) toItem:nil attribute:(NSLayoutAttributeNotAnAttribute) multiplier:1.0 constant:0];
+        const2.priority = UILayoutPriorityRequired;
+        NSLayoutConstraint *const3 = [NSLayoutConstraint constraintWithItem:progressWrapperView attribute:(NSLayoutAttributeCenterX) relatedBy:(NSLayoutRelationEqual) toItem:toolBar attribute:(NSLayoutAttributeCenterX) multiplier:1.0 constant:0];
+        NSArray *consts1 = [NSLayoutConstraint constraintsWithVisualFormat:@"V:|[progressWrapperView]|" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(progressWrapperView)];
+        [toolBar addConstraint:const1];
+        [progressWrapperView addConstraint:const2];
+        [toolBar addConstraint:const3];
+        [toolBar addConstraints:consts1];
+    }
     
+    // 进度条
+    _JWZProgressSliderView *progressSlider = [[_JWZProgressSliderView alloc] initWithProgressViewStyle:(UIProgressViewStyleDefault)];
+    progressSlider.userInteractionEnabled = YES;
+    progressSlider.trackImage = UIImageFromJWZPlayerBundle(@"icon-img-barlight");
+    progressSlider.progressImage = UIImageFromJWZPlayerBundle(@"icon-img-bardark");
+//    progressSlider.slider.enabled = NO;
+    
+    [progressSlider.slider setThumbImage:UIImageFromJWZPlayerBundle(@"icon-img-point") forState:(UIControlStateNormal)];
+    [progressSlider.slider setMinimumTrackImage:UIImageFromJWZPlayerBundle(@"icon-img-barcolored") forState:(UIControlStateNormal)];
+    [progressSlider.slider setMaximumTrackTintColor:[UIColor clearColor]];
+    
+    [progressWrapperView addSubview:progressSlider];
+    UILabel *durationLabel = [[UILabel alloc] init];
+    durationLabel.font = [UIFont systemFontOfSize:[UIFont smallSystemFontSize]];
+    durationLabel.textColor = [UIColor lightGrayColor];
+    durationLabel.text = @"00:00";
+    durationLabel.textAlignment = NSTextAlignmentCenter;
+    [durationLabel setContentHuggingPriority:(UILayoutPriorityRequired) forAxis:(UILayoutConstraintAxisHorizontal)];
+    [progressWrapperView addSubview:durationLabel];
+    {
+        progressSlider.translatesAutoresizingMaskIntoConstraints = NO;
+        durationLabel.translatesAutoresizingMaskIntoConstraints = NO;
+        NSLayoutConstraint *const1 = [NSLayoutConstraint constraintWithItem:progressSlider attribute:(NSLayoutAttributeCenterY) relatedBy:(NSLayoutRelationEqual) toItem:progressWrapperView attribute:(NSLayoutAttributeCenterY) multiplier:1.0 constant:0];
+        [progressWrapperView addConstraint:const1];
+        NSLayoutConstraint *const2 = [NSLayoutConstraint constraintWithItem:durationLabel attribute:(NSLayoutAttributeCenterY) relatedBy:(NSLayoutRelationEqual) toItem:progressWrapperView attribute:(NSLayoutAttributeCenterY) multiplier:1.0 constant:0];
+        [progressWrapperView addConstraint:const2];
+        NSArray *consts1 = [NSLayoutConstraint constraintsWithVisualFormat:@"H:|[progressSlider]-3-[durationLabel]|" options:(NSLayoutFormatDirectionLeadingToTrailing) metrics:nil views:NSDictionaryOfVariableBindings(progressSlider, durationLabel)];
+        [progressWrapperView addConstraints:consts1];
+    }
+    
+    self.playButton = playButton;
+    self.zoomButton = zoomButton;
+    self.progressSliderView = progressSlider;
+    self.durationLabel = durationLabel;
+}
+
+- (void)playButtonAction:(UIButton *)button {
+    if (button.isSelected) {
+        [self.playerController pause];
+    } else {
+        [self.playerController play];
+    }
+}
+
+- (void)zoomButtonAction:(UIButton *)button {
+    if (button.isSelected) {
+        button.selected = NO;
+        [self.playerController display:(JWZPlayerControllerDisplayModeEmbedded) animated:YES];
+    } else {
+        button.selected = YES;
+        [self.playerController display:(JWZPlayerControllerDisplayModeNormal) animated:YES];
+    }
+}
+
+- (void)playerController:(JWZPlayerController *)playerController didStartPlayingMediaWithDuration:(NSTimeInterval)duration {
+    self.progressSliderView.slider.minimumValue = 0;
+    self.progressSliderView.slider.maximumValue = duration;
+    self.playButton.selected = YES;
+    NSInteger totalSeconds = duration;
+    NSInteger second       = totalSeconds % 60;
+    NSInteger totalMinutes = totalSeconds / 60;
+    NSInteger minute       = totalMinutes % 60;
+    if (totalMinutes < 60) {
+        self.durationLabel.text = [NSString stringWithFormat:@"%02ld:%02ld", (long)minute, (long)second];
+    } else {
+        NSInteger hour = totalMinutes / 60;
+        self.durationLabel.text = [NSString stringWithFormat:@"%02ld:%02ld:%02ld", (long)hour, (long)minute, (long)second];
+    }
+}
+
+- (void)playerController:(JWZPlayerController *)playerController didBufferMediaWithProgress:(CGFloat)progress {
+    [self.progressSliderView setProgress:progress animated:YES];
+}
+
+- (void)playerControllerDidPausePlaying:(JWZPlayerController *)playerController {
+    self.playButton.selected = NO;
+}
+
+- (void)playerControllerDidFinishPlaying:(JWZPlayerController *)playerController {
+    self.playButton.selected = NO;
+}
+
+@end
+
+@implementation _JWZProgressSliderView
+
+- (instancetype)initWithProgressViewStyle:(UIProgressViewStyle)style {
+    self = [super initWithProgressViewStyle:style];
+    if (self != nil) {
+        [self _viewDidInitialize];
+    }
+    return self;
+}
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder {
+    self = [super initWithCoder:aDecoder];
+    if (self != nil) {
+        [self _viewDidInitialize];
+    }
+    return self;
+}
+
+- (void)_viewDidInitialize {
+    UISlider *slider = [[UISlider alloc] init];
+    [self addSubview:slider];
+    
+    slider.translatesAutoresizingMaskIntoConstraints = NO;
+    NSArray *consts1 = [NSLayoutConstraint constraintsWithVisualFormat:@"H:|[slider]|" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(slider)];
+    NSArray *consts2 = [NSLayoutConstraint constraintsWithVisualFormat:@"V:|[slider]|" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(slider)];
+    [self addConstraints:consts1];
+    [self addConstraints:consts2];
+    _slider = slider;
 }
 
 @end

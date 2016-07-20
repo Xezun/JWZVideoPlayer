@@ -15,6 +15,7 @@ typedef NS_ENUM(NSInteger, JWZPlayerControllerDisplayMode) {
 };
 
 @class JWZPlayerController;
+@protocol JWZPlayerControllerPlaybackControls;
 
 /**
  *  JWZPlayerControlle 的代理方法
@@ -116,12 +117,16 @@ typedef NS_ENUM(NSInteger, JWZPlayerControllerDisplayMode) {
  */
 - (void)stop;
 
+@property (nonatomic, strong, nullable) __kindof UIView<JWZPlayerControllerPlaybackControls> *playbackControls;
+
 @end
 
 @protocol JWZPlayerControllerPlaybackControls <NSObject>
 
 @optional
-
-
+- (void)playerController:(JWZPlayerController * _Nonnull)playerController didStartPlayingMediaWithDuration:(NSTimeInterval)duration;
+- (void)playerController:(JWZPlayerController * _Nonnull)playerController didBufferMediaWithProgress:(CGFloat)progress;
+- (void)playerControllerDidPausePlaying:(JWZPlayerController * _Nonnull)playerController;
+- (void)playerControllerDidFinishPlaying:(JWZPlayerController * _Nonnull)playerController;
 
 @end
