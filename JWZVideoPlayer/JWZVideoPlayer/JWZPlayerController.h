@@ -117,7 +117,14 @@ typedef NS_ENUM(NSInteger, JWZPlayerControllerDisplayMode) {
  */
 - (void)stop;
 
+/**
+ *  当前播放时间。
+ */
 @property (nonatomic, readonly) NSTimeInterval currentTime;
+
+/**
+ *  回放控制UI
+ */
 @property (nonatomic, strong, nullable) __kindof UIView<JWZPlayerControllerPlaybackControls> *playbackControls;
 
 @end
