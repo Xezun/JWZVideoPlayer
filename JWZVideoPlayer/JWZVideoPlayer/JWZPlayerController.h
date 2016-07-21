@@ -18,7 +18,7 @@ typedef NS_ENUM(NSInteger, JWZPlayerControllerDisplayMode) {
 @protocol JWZPlayerControllerPlaybackControls;
 
 /**
- *  JWZPlayerControlle 的代理方法
+ *  JWZPlayerController 的代理方法
  */
 @protocol JWZPlayerControllerDelegate <NSObject>
 
@@ -81,6 +81,7 @@ typedef NS_ENUM(NSInteger, JWZPlayerControllerDisplayMode) {
  *  @param animated    是否开启动画效果。
  */
 - (void)display:(JWZPlayerControllerDisplayMode)displayMode animated:(BOOL)animated;
+#warning 参数目前 animated 并没有实现其功能
 
 /**
  *  呈现播放器。你需要调用此方法才能显示播放器。
