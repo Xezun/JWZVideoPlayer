@@ -20,6 +20,7 @@
 		3161DBC61C954EDB00F67B29 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3161DBC41C954EDB00F67B29 /* AVFoundation.framework */; };
 		3161DBC71C954EDB00F67B29 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3161DBC51C954EDB00F67B29 /* AVKit.framework */; };
 		C41476691D3F5CB0006FE7FB /* JWZPlayer.bundle in Resources */ = {isa = PBXBuildFile; fileRef = C41476681D3F5CB0006FE7FB /* JWZPlayer.bundle */; };
+		C428E26B1D405A1E0019D21C /* JWZPlayerControllerPlaybackControls.m in Sources */ = {isa = PBXBuildFile; fileRef = C428E26A1D405A1E0019D21C /* JWZPlayerControllerPlaybackControls.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -44,6 +45,8 @@
 		3161DBC41C954EDB00F67B29 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		3161DBC51C954EDB00F67B29 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		C41476681D3F5CB0006FE7FB /* JWZPlayer.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = JWZPlayer.bundle; sourceTree = "<group>"; };
+		C428E2691D405A1E0019D21C /* JWZPlayerControllerPlaybackControls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JWZPlayerControllerPlaybackControls.h; sourceTree = "<group>"; };
+		C428E26A1D405A1E0019D21C /* JWZPlayerControllerPlaybackControls.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JWZPlayerControllerPlaybackControls.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -119,6 +122,8 @@
 			children = (
 				3161DBBC1C954E0500F67B29 /* JWZPlayerController.h */,
 				3161DBBD1C954E0500F67B29 /* JWZPlayerController.m */,
+				C428E2691D405A1E0019D21C /* JWZPlayerControllerPlaybackControls.h */,
+				C428E26A1D405A1E0019D21C /* JWZPlayerControllerPlaybackControls.m */,
 				3161DBC11C954E3900F67B29 /* JWZPlayer.h */,
 				3161DBC21C954E3900F67B29 /* JWZPlayer.m */,
 				C41476681D3F5CB0006FE7FB /* JWZPlayer.bundle */,
@@ -157,6 +162,7 @@
 				TargetAttributes = {
 					3161DBA01C954DB600F67B29 = {
 						CreatedOnToolsVersion = 7.2.1;
+						DevelopmentTeam = MGP5RF9XXP;
 					};
 				};
 			};
@@ -204,6 +210,7 @@
 				314BE9051C96D89000519CA8 /* DALabeledCircularProgressView.m in Sources */,
 				3161DBBF1C954E0500F67B29 /* JWZPlayerController.m in Sources */,
 				3161DBC31C954E3900F67B29 /* JWZPlayer.m in Sources */,
+				C428E26B1D405A1E0019D21C /* JWZPlayerControllerPlaybackControls.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -313,11 +320,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = JWZVideoPlayer/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.meijiuhe.videoplayer;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mlibai.demo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "035c6ecc-aa1c-4db2-ac4a-cf8ada220475";
+				PROVISIONING_PROFILE = "";
 			};
 			name = Debug;
 		};
@@ -325,11 +334,13 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				INFOPLIST_FILE = JWZVideoPlayer/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.meijiuhe.videoplayer;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mlibai.demo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "035c6ecc-aa1c-4db2-ac4a-cf8ada220475";
+				PROVISIONING_PROFILE = "";
 			};
 			name = Release;
 		};

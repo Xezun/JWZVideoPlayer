@@ -157,7 +157,16 @@ IB_DESIGNABLE @interface JWZPlayer () <JWZPlayerMediaDelegate>
             case JWZPlayerStatusPaused: { // 播放器处于暂停状态
                 [self registerForAVPlayerItemNotification];
                 [self.player play];
-                [self _JWZPlayer_AVPlayerDidBeginPlaying];
+                self.status = JWZPlayerStatusPlaying;
+                // [self _JWZPlayer_AVPlayerDidBeginPlaying]; // 暂停状态恢复播放，不发送事件
+                break;
+            }
+            case JWZPlayerStatusFinished: {
+                __weak typeof(self) weakSelf = self;
+                [self.media moveToStartTime:^(BOOL finished) {
+                    weakSelf.status = JWZPlayerStatusStopped;
+                    [weakSelf play];
+                }];
                 break;
             }
             default:
@@ -242,15 +251,12 @@ IB_DESIGNABLE @interface JWZPlayer () <JWZPlayerMediaDelegate>
 
 // 播放完成
 - (void)_JWZPlayer_AVPlayerItemDidPlayToEndTime:(NSNotification *)notification {
-    __weak typeof(self) weakSelf = self;
-    [weakSelf unregisterAVPlayerItemNotification];
-    [[weakSelf player] pause];
-    [self.media moveToStartTime:^(BOOL finished) {
-        weakSelf.status = JWZPlayerStatusStopped;
-        if (weakSelf.delegate != nil && [weakSelf.delegate respondsToSelector:@selector(playerDidFinishPlaying:)]) {
-            [weakSelf.delegate playerDidFinishPlaying:weakSelf];
-        }
-    }];
+    [self unregisterAVPlayerItemNotification];
+    [[self player] pause];
+    self.status = JWZPlayerStatusFinished;
+    if (self.delegate != nil && [self.delegate respondsToSelector:@selector(playerDidFinishPlaying:)]) {
+        [self.delegate playerDidFinishPlaying:self];
+    }
 }
 
 // 播放失败

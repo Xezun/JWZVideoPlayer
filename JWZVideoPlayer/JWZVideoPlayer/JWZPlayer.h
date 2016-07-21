@@ -14,7 +14,8 @@ typedef NS_ENUM(NSInteger, JWZPlayerStatus) {
     JWZPlayerStatusWaiting,  // 等待
     JWZPlayerStatusPlaying,  // 正在播放
     JWZPlayerStatusStalled,  // 缓冲
-    JWZPlayerStatusPaused    // 暂停
+    JWZPlayerStatusPaused,   // 暂停
+    JWZPlayerStatusFinished  // 播放完成
 };
 
 @protocol JWZPlayerDelegate;
@@ -39,7 +40,10 @@ typedef NS_ENUM(NSInteger, JWZPlayerStatus) {
 @property (nonatomic, weak) id<JWZPlayerDelegate> delegate;
 
 /**
- *  开始播放。调用此方法，可能会直接触发代理事件 -playerDidBeginPlaying: 。
+ *  播放。其可能触发代理事件 -playerDidBeginPlaying: 被调用：
+ *  1，播放器处于 stop 状态，如果资源准备好，立即触发代理事件；如果资源没有准备好，则在可以播放时，触发代理事件。
+ *  2，播放器处于 pause 状态，不触发代理事件。
+ *  3，资源不可用触发 -player:didFailToPlayWithError: 事件。
  */
 - (void)play;
 

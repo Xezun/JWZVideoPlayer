@@ -117,16 +117,20 @@ typedef NS_ENUM(NSInteger, JWZPlayerControllerDisplayMode) {
  */
 - (void)stop;
 
+@property (nonatomic, readonly) NSTimeInterval currentTime;
 @property (nonatomic, strong, nullable) __kindof UIView<JWZPlayerControllerPlaybackControls> *playbackControls;
 
 @end
 
+
+/**
+ *  播放控制视图需要遵循的代理方法。
+ */
 @protocol JWZPlayerControllerPlaybackControls <NSObject>
 
 @optional
 - (void)playerController:(JWZPlayerController * _Nonnull)playerController didStartPlayingMediaWithDuration:(NSTimeInterval)duration;
 - (void)playerController:(JWZPlayerController * _Nonnull)playerController didBufferMediaWithProgress:(CGFloat)progress;
-- (void)playerControllerDidPausePlaying:(JWZPlayerController * _Nonnull)playerController;
 - (void)playerControllerDidFinishPlaying:(JWZPlayerController * _Nonnull)playerController;
 
 @end
