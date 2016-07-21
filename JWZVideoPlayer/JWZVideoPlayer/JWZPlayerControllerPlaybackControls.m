@@ -129,8 +129,8 @@ static UIImage *UIImageFromJWZPlayerBundle(NSString *imageName) {
     progressSlider.thumbTintColor         = [UIColor clearColor];
     progressSlider.minimumTrackTintColor  = [UIColor colorWithWhite:0.9 alpha:1.0];
     
-    progressSlider.progressView.trackTintColor    = [UIColor colorWithWhite:0.7 alpha:1.0];
-    progressSlider.progressView.progressTintColor = [UIColor colorWithWhite:0.4 alpha:1.0];
+    progressSlider.progressView.trackTintColor    = [UIColor colorWithWhite:0.5 alpha:1.0];
+    progressSlider.progressView.progressTintColor = [UIColor colorWithRed:0.4 green:0.7 blue:0.4 alpha:1.0];
  
     [progressWrapperView addSubview:progressSlider];
     _JWZTimeDisplayLabel *durationLabel = [[_JWZTimeDisplayLabel alloc] init];
