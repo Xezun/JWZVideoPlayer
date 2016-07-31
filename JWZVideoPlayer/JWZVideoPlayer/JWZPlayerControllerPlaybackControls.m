@@ -62,16 +62,26 @@ static UIImage *UIImageFromJWZPlayerBundle(NSString *imageName) {
 }
 
 - (void)_viewDidInitialize {
-    const CGFloat height = 30.0;
-    const CGFloat buttonWidth = 40.0;
+    const CGFloat barMaxHeight = 40.0;
+    const CGFloat barMinHeight = 30.0;
+    
     // 底部控制条
     UIView *toolBar = [[UIView alloc] init];
-    toolBar.backgroundColor = [UIColor colorWithWhite:0 alpha:0.5];
+    toolBar.backgroundColor = [UIColor colorWithWhite:1 alpha:0.5];
     [self addSubview:toolBar];
     {
         toolBar.translatesAutoresizingMaskIntoConstraints = NO;
         NSArray *consts1 = [NSLayoutConstraint constraintsWithVisualFormat:@"H:|[toolBar]|" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(toolBar)];
-        NSArray *consts2 = [NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolBar(==height)]|" options:(NSLayoutFormatAlignAllLeft) metrics:@{@"height": @(height)} views:NSDictionaryOfVariableBindings(toolBar)];
+        NSArray *consts2 = [NSLayoutConstraint constraintsWithVisualFormat:@"V:[toolBar]|" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(toolBar)];
+        NSLayoutConstraint *const1 = [NSLayoutConstraint constraintWithItem:toolBar attribute:(NSLayoutAttributeHeight) relatedBy:(NSLayoutRelationGreaterThanOrEqual) toItem:nil attribute:(NSLayoutAttributeNotAnAttribute) multiplier:1.0 constant:barMinHeight];
+        const1.priority = UILayoutPriorityDefaultHigh;
+        NSLayoutConstraint *const2 = [NSLayoutConstraint constraintWithItem:toolBar attribute:(NSLayoutAttributeHeight) relatedBy:(NSLayoutRelationLessThanOrEqual) toItem:nil attribute:(NSLayoutAttributeNotAnAttribute) multiplier:1.0 constant:barMaxHeight];
+        const2.priority = UILayoutPriorityDefaultHigh;
+        NSLayoutConstraint *const3 = [NSLayoutConstraint constraintWithItem:toolBar attribute:(NSLayoutAttributeHeight) relatedBy:(NSLayoutRelationEqual) toItem:self attribute:(NSLayoutAttributeHeight) multiplier:0.25 constant:0];
+        const3.priority = UILayoutPriorityDefaultHigh;
+        [toolBar addConstraint:const1];
+        [toolBar addConstraint:const2];
+        [self addConstraint:const3];
         [self addConstraints:consts1];
         [self addConstraints:consts2];
     }
@@ -83,10 +93,12 @@ static UIImage *UIImageFromJWZPlayerBundle(NSString *imageName) {
     [toolBar addSubview:playButton];
     {
         playButton.translatesAutoresizingMaskIntoConstraints = NO;
-        NSArray *consts1 = [NSLayoutConstraint constraintsWithVisualFormat:@"H:|[playButton(==buttonWidth)]" options:(NSLayoutFormatAlignAllLeft) metrics:@{@"buttonWidth": @(buttonWidth)} views:NSDictionaryOfVariableBindings(playButton)];
+        NSArray *consts1 = [NSLayoutConstraint constraintsWithVisualFormat:@"H:|[playButton]" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(playButton)];
         NSArray *consts2 = [NSLayoutConstraint constraintsWithVisualFormat:@"V:|[playButton]|" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(playButton)];
         [toolBar addConstraints:consts1];
         [toolBar addConstraints:consts2];
+        NSLayoutConstraint *const1 = [NSLayoutConstraint constraintWithItem:playButton attribute:(NSLayoutAttributeWidth) relatedBy:(NSLayoutRelationEqual) toItem:playButton attribute:(NSLayoutAttributeHeight) multiplier:1.0 constant:0];
+        [playButton addConstraint:const1];
     }
     [playButton addTarget:self action:@selector(playButtonAction:) forControlEvents:(UIControlEventTouchUpInside)];
     
@@ -97,10 +109,12 @@ static UIImage *UIImageFromJWZPlayerBundle(NSString *imageName) {
     [toolBar addSubview:zoomButton];
     {
         zoomButton.translatesAutoresizingMaskIntoConstraints = NO;
-        NSArray *consts1 = [NSLayoutConstraint constraintsWithVisualFormat:@"H:[zoomButton(==buttonWidth)]|" options:(NSLayoutFormatAlignAllLeft) metrics:@{@"buttonWidth": @(buttonWidth)} views:NSDictionaryOfVariableBindings(zoomButton)];
+        NSArray *consts1 = [NSLayoutConstraint constraintsWithVisualFormat:@"H:[zoomButton]|" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(zoomButton)];
         NSArray *consts2 = [NSLayoutConstraint constraintsWithVisualFormat:@"V:|[zoomButton]|" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(zoomButton)];
         [toolBar addConstraints:consts1];
         [toolBar addConstraints:consts2];
+        NSLayoutConstraint *const1 = [NSLayoutConstraint constraintWithItem:zoomButton attribute:(NSLayoutAttributeWidth) relatedBy:(NSLayoutRelationEqual) toItem:zoomButton attribute:(NSLayoutAttributeHeight) multiplier:1.0 constant:0];
+        [zoomButton addConstraint:const1];
     }
     [zoomButton addTarget:self action:@selector(zoomButtonAction:) forControlEvents:(UIControlEventTouchUpInside)];
     
@@ -109,16 +123,19 @@ static UIImage *UIImageFromJWZPlayerBundle(NSString *imageName) {
     [toolBar addSubview:progressWrapperView];
     {
         progressWrapperView.translatesAutoresizingMaskIntoConstraints = NO;
-        NSLayoutConstraint *const1 = [NSLayoutConstraint constraintWithItem:progressWrapperView attribute:(NSLayoutAttributeWidth) relatedBy:(NSLayoutRelationEqual) toItem:toolBar attribute:(NSLayoutAttributeWidth) multiplier:1.0 constant:-buttonWidth * 2.0];
-        const1.priority = UILayoutPriorityDefaultHigh;
+        NSArray *consts1 = [NSLayoutConstraint constraintsWithVisualFormat:@"H:[playButton]-5@750-[progressWrapperView]-5@750-[zoomButton]" options:(NSLayoutFormatDirectionLeadingToTrailing) metrics:nil views:NSDictionaryOfVariableBindings(playButton, progressWrapperView, zoomButton)];
+        [toolBar addConstraints:consts1];
+//        NSLayoutConstraint *const1 = [NSLayoutConstraint constraintWithItem:progressWrapperView attribute:(NSLayoutAttributeWidth) relatedBy:(NSLayoutRelationEqual) toItem:toolBar attribute:(NSLayoutAttributeWidth) multiplier:1.0 constant:-buttonWidth * 2.0];
+//        const1.priority = UILayoutPriorityDefaultHigh;
+        NSLayoutConstraint *const1 = [NSLayoutConstraint constraintWithItem:progressWrapperView attribute:(NSLayoutAttributeCenterX) relatedBy:(NSLayoutRelationEqual) toItem:toolBar attribute:(NSLayoutAttributeCenterX) multiplier:1.0 constant:0];
+        [toolBar addConstraint:const1];
         NSLayoutConstraint *const2 = [NSLayoutConstraint constraintWithItem:progressWrapperView attribute:(NSLayoutAttributeWidth) relatedBy:(NSLayoutRelationGreaterThanOrEqual) toItem:nil attribute:(NSLayoutAttributeNotAnAttribute) multiplier:1.0 constant:0];
         const2.priority = UILayoutPriorityRequired;
-        NSLayoutConstraint *const3 = [NSLayoutConstraint constraintWithItem:progressWrapperView attribute:(NSLayoutAttributeCenterX) relatedBy:(NSLayoutRelationEqual) toItem:toolBar attribute:(NSLayoutAttributeCenterX) multiplier:1.0 constant:0];
-        NSArray *consts1 = [NSLayoutConstraint constraintsWithVisualFormat:@"V:|[progressWrapperView]|" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(progressWrapperView)];
-        [toolBar addConstraint:const1];
         [progressWrapperView addConstraint:const2];
+        NSLayoutConstraint *const3 = [NSLayoutConstraint constraintWithItem:progressWrapperView attribute:(NSLayoutAttributeCenterX) relatedBy:(NSLayoutRelationEqual) toItem:toolBar attribute:(NSLayoutAttributeCenterX) multiplier:1.0 constant:0];
         [toolBar addConstraint:const3];
-        [toolBar addConstraints:consts1];
+        NSArray *consts2 = [NSLayoutConstraint constraintsWithVisualFormat:@"V:|[progressWrapperView]|" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(progressWrapperView)];
+        [toolBar addConstraints:consts2];
     }
     
     // 进度条

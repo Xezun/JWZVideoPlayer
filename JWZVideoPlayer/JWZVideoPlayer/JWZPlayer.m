@@ -42,6 +42,11 @@
 - (JWZPlayerMediaStatus)status;
 - (void)setStatus:(JWZPlayerMediaStatus)status;
 
+/**
+ *  媒体资源播放进度移动到开始。
+ *
+ *  @param completionHandler 如果执行操作时，已有正在进行的操作，block 会立即执行，finished = NO；如果操作没有被别的操作所打断，block 在执行时，finished = YES 。
+ */
 - (void)moveToStartTime:(void (^)(BOOL finished))completionHandler;
 
 @end
@@ -135,9 +140,13 @@ IB_DESIGNABLE @interface JWZPlayer () <JWZPlayerMediaDelegate>
             case JWZPlayerStatusStopped: {  // 播放器当前处于停止状态
                 switch (self.media.status) {
                     case JWZPlayerMediaStatusAvailable: { // 资源可以播放
-                        [self registerForAVPlayerItemNotification];
-                        [self.player play];
-                        [self _JWZPlayer_AVPlayerDidBeginPlaying];
+                        [self.media moveToStartTime:^(BOOL finished) {
+                            if (finished) {
+                                [self registerForAVPlayerItemNotification];
+                                [self.player play];
+                                [self _JWZPlayer_AVPlayerDidBeginPlaying];
+                            }
+                        }];
                         break;
                     }
                     case JWZPlayerMediaStatusUnavailable: { // 资源无法播放
@@ -159,14 +168,6 @@ IB_DESIGNABLE @interface JWZPlayer () <JWZPlayerMediaDelegate>
                 [self.player play];
                 self.status = JWZPlayerStatusPlaying;
                 // [self _JWZPlayer_AVPlayerDidBeginPlaying]; // 暂停状态恢复播放，不发送事件
-                break;
-            }
-            case JWZPlayerStatusFinished: {
-                __weak typeof(self) weakSelf = self;
-                [self.media moveToStartTime:^(BOOL finished) {
-                    weakSelf.status = JWZPlayerStatusStopped;
-                    [weakSelf play];
-                }];
                 break;
             }
             default:
@@ -253,7 +254,7 @@ IB_DESIGNABLE @interface JWZPlayer () <JWZPlayerMediaDelegate>
 - (void)_JWZPlayer_AVPlayerItemDidPlayToEndTime:(NSNotification *)notification {
     [self unregisterAVPlayerItemNotification];
     [[self player] pause];
-    self.status = JWZPlayerStatusFinished;
+    self.status = JWZPlayerStatusStopped;
     if (self.delegate != nil && [self.delegate respondsToSelector:@selector(playerDidFinishPlaying:)]) {
         [self.delegate playerDidFinishPlaying:self];
     }
@@ -519,7 +520,6 @@ static NSString *const kJWZObservedAVPlayerItemProperties[_JWZNumberOfOberserved
             }
         }
     }
-    
 }
 
 @end
