@@ -9,7 +9,7 @@
 #import "JWZPlayerController.h"
 #import "JWZPlayerControllerPlaybackControls.h"
 
-static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.25;
+static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.50;
 
 @interface JWZPlayerController ()
 
@@ -61,6 +61,17 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.25;
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
+}
+
+/**
+ *  禁止转屏。
+ */
+- (BOOL)shouldAutorotate {
+    return YES;
+}
+
+- (BOOL)prefersStatusBarHidden {
+    return YES;
 }
 
 /*
@@ -134,8 +145,10 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.25;
         if (self.presentingViewController.view.window == view.window) {  // 处于同一个 window
             [UIView animateWithDuration:kJWZPlayerControllerAnimationDefaultDuration animations:^{
                 // 把播放器缩放到目的视图的位置
-                self.view.frame = [view.superview convertRect:view.frame toView:view.window];
+                CGRect viewFrame = view.frame;
+                self.view.frame = CGRectMake(CGRectGetMidX(viewFrame) - CGRectGetHeight(viewFrame) / 2.0, CGRectGetMidY(viewFrame) - CGRectGetWidth(viewFrame) / 2.0, CGRectGetHeight(viewFrame), CGRectGetWidth(viewFrame));// [view.superview convertRect:view.frame toView:view.window];
                 [self.view layoutIfNeeded];
+                self.view.transform = CGAffineTransformIdentity;
             } completion:^(BOOL finished) {
                 [self dismissViewControllerAnimated:NO completion:^{
                     // 将播放器放到目的视图上
@@ -181,12 +194,17 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.25;
             [self.view.window addSubview:self.view];
         }
         
+        CGRect windowBounds = self.view.window.bounds;
+        CGFloat windowWidth = CGRectGetWidth(windowBounds);
+        CGFloat windowHeight = CGRectGetHeight(windowBounds);
         [UIView animateWithDuration:kJWZPlayerControllerAnimationDefaultDuration animations:^{
             // 背景变黑并缩放到全屏
-            self.view.frame = self.view.window.bounds;
+            self.view.frame = CGRectMake((windowWidth - windowHeight) / 2.0, (windowHeight - windowWidth) / 2.0, windowHeight, windowWidth);
+            self.view.transform = CGAffineTransformMakeRotation(M_PI_2); // 旋转 90 度
             [self.view layoutIfNeeded];
         } completion:^(BOOL finished) {
             // Present播放器控制器
+            NSLog(@"frame: %@", NSStringFromCGRect(self.view.frame));
             [viewController presentViewController:self animated:NO completion:NULL];
         }];
     } else if (self.presentingViewController != viewController) { // 已经是全屏状态

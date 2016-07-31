@@ -25,7 +25,7 @@
                                 </connections>
                             </button>
                             <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="kvu-tM-CsV">
-                                <rect key="frame" x="20" y="111" width="240" height="203"/>
+                                <rect key="frame" x="20" y="111" width="240" height="126"/>
                                 <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                             </view>
                         </subviews>
