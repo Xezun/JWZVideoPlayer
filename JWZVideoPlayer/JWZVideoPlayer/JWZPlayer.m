@@ -20,6 +20,7 @@
 
 
 @import AVFoundation;
+@import AVKit;
 
 #pragma mark - =================
 #pragma mark - JWZPlayerMedia ()
@@ -367,15 +368,38 @@ static NSString *const kJWZObservedAVPlayerItemProperties[_JWZNumberOfOberserved
     return [self initWithResourceURL:nil];
 }
 
+/**
+ *  指定初始化方法。
+ */
 - (instancetype)initWithResourceURL:(NSURL *)resourceURL {
     self = [super init];
     if (self != nil) {
-        [self setResourceURL:resourceURL];
+        _resourceURL = resourceURL;
+        if (resourceURL != nil) {
+            AVPlayerItem *playerItem = [AVPlayerItem playerItemWithURL:resourceURL];
+            if (playerItem != nil) {
+                if (playerItem.status != AVPlayerItemStatusFailed) {
+                    if ([playerItem isPlaybackBufferFull]) {
+                        _status = JWZPlayerMediaStatusAvailable;
+                        NSArray<NSValue *> *seekableTimeRanges = [playerItem seekableTimeRanges];
+                        if (seekableTimeRanges.count > 0) {
+                            CMTime startTime = [[seekableTimeRanges firstObject] CMTimeRangeValue].start;
+                            [playerItem seekToTime:startTime];
+                        }
+                    } else {
+                        _status = JWZPlayerMediaStatusNewMedia;
+                    }
+                }
+                _playerItem = playerItem;
+            }
+        } else {
+            _status = JWZPlayerMediaStatusUnavailable;
+        }
     }
     return self;
 }
 
-- (void)_JWZPlayerMedia_ResourceURLDidChange {
+- (void)JWZPlayerMedia_resourceURLDidChange {
     if (_resourceURL == nil) {
         self.playerItem = nil;
         self.status = JWZPlayerMediaStatusUnavailable;
@@ -407,7 +431,7 @@ static NSString *const kJWZObservedAVPlayerItemProperties[_JWZNumberOfOberserved
 - (void)setResourceURL:(NSURL *)resourceURL {
     if (_resourceURL != resourceURL) {
         _resourceURL = resourceURL;
-        [self _JWZPlayerMedia_ResourceURLDidChange];
+        [self JWZPlayerMedia_resourceURLDidChange];
     }
 }
 

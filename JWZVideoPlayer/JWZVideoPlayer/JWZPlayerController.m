@@ -67,11 +67,19 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.50;
  *  禁止转屏。
  */
 - (BOOL)shouldAutorotate {
-    return YES;
+    return NO;
 }
 
 - (BOOL)prefersStatusBarHidden {
     return YES;
+}
+
+- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation {
+   return UIInterfaceOrientationPortrait;
+}
+
+- (UIInterfaceOrientationMask)supportedInterfaceOrientations {
+    return UIInterfaceOrientationMaskPortrait;
 }
 
 /*
@@ -219,6 +227,9 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.50;
 #pragma mark - Public Methods
 
 - (void)play {
+    if (self.playbackControls != nil && [self.playbackControls respondsToSelector:@selector(playerControllerWillStartPlaying:)]) {
+        [self.playbackControls playerControllerWillStartPlaying:self];
+    }
     [self.player play];
 }
 
@@ -279,12 +290,16 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.50;
 
 // 播放停滞了
 - (void)playerDidStallPlaying:(JWZPlayer *)player {
-
+    if (self.playbackControls != nil && [self.playbackControls respondsToSelector:@selector(playerControllerDidStallPlaying:)]) {
+        [self.playbackControls playerControllerDidStallPlaying:self];
+    }
 }
 
 // 播放继续
 - (void)playerDidContinuePlaying:(JWZPlayer *)player {
-
+    if (self.playbackControls != nil && [self.playbackControls respondsToSelector:@selector(playerControllerDidContinuePlaying:)]) {
+        [self.playbackControls playerControllerDidContinuePlaying:self];
+    }
 }
 
 // 播放完成
@@ -296,7 +311,9 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.50;
 
 // 播放发生错误
 - (void)player:(JWZPlayer *)player didFailToPlayWithError:(NSError *)error {
-
+    if (self.playbackControls != nil && [self.playbackControls respondsToSelector:@selector(playerControllerDidFailToPlay:)]) {
+        [self.playbackControls playerControllerDidFailToPlay:self];
+    }
 }
 
 - (void)player:(JWZPlayer *)player didBufferMediaWithProgress:(CGFloat)progress {

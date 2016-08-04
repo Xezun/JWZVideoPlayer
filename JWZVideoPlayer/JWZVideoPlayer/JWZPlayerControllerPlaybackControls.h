@@ -9,6 +9,9 @@
 #import <UIKit/UIKit.h>
 #import "JWZPlayerController.h"
 
+/**
+ *  播放控制界面。
+ */
 @interface JWZPlayerControllerPlaybackControls : UIView <JWZPlayerControllerPlaybackControls>
 
 @property (nonatomic, weak) JWZPlayerController *playerController;

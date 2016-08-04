@@ -31,6 +31,7 @@ static UIImage *UIImageFromJWZPlayerBundle(NSString *imageName) {
 @property (nonatomic, weak) UIButton *zoomButton;
 @property (nonatomic, weak) _JWZTimeDisplayLabel *durationLabel;
 @property (nonatomic, weak) _JWZProgressSlider *progressSlider;
+@property (nonatomic, weak) UIActivityIndicatorView *activityIndicatorView;
 
 @property (nonatomic, strong) NSTimer *playingProgressTimer;
 
@@ -179,26 +180,6 @@ static UIImage *UIImageFromJWZPlayerBundle(NSString *imageName) {
     [super layoutSubviews];
 }
 
-#pragma mark - Properties 
-
-@synthesize playingProgressTimer = _playingProgressTimer;
-
-- (NSTimer *)playingProgressTimer {
-    if (_playingProgressTimer != nil) {
-        return _playingProgressTimer;
-    }
-    return _playingProgressTimer;
-}
-
-- (void)setPlayingProgressTimer:(NSTimer *)playingProgressTimer {
-    if (_playingProgressTimer != playingProgressTimer) {
-        if (_playingProgressTimer != nil) {
-            [_playingProgressTimer invalidate];
-        }
-        _playingProgressTimer = playingProgressTimer;
-    }
-}
-
 #pragma mark - Events And Actions
 
 - (void)playButtonAction:(UIButton *)button {
@@ -232,26 +213,53 @@ static UIImage *UIImageFromJWZPlayerBundle(NSString *imageName) {
 
 #pragma mark - <JWZPlayerControllerPlaybackControls>
 
-- (void)playerController:(JWZPlayerController *)playerController didStartPlayingMediaWithDuration:(NSTimeInterval)duration {
+- (void)playerControllerWillStartPlaying:(JWZPlayerController *)playerController {
+    self.hidden = NO;
     self.playButton.selected = YES;
+    self.durationLabel.duration = 0;
+    [self.activityIndicatorView startAnimating];
+}
+
+- (void)playerController:(JWZPlayerController *)playerController didStartPlayingMediaWithDuration:(NSTimeInterval)duration {
+    [self.activityIndicatorView stopAnimating];
     // 显示时长
     self.durationLabel.duration = duration;
     // 播放进度
-    if (self.progressSlider.maximumValue != duration) {
+    if (duration != NSNotFound && self.progressSlider.maximumValue != duration) {
         self.progressSlider.maximumValue = duration;
         NSTimeInterval interval = self.progressSlider.maximumValue / CGRectGetWidth(self.progressSlider.frame);
         interval = MAX(0.1, interval);
         self.playingProgressTimer = [NSTimer scheduledTimerWithTimeInterval:interval target:self selector:@selector(playingProgressTimerAction:) userInfo:nil repeats:YES];
     }
     [self.playingProgressTimer fire];
+    [UIView animateKeyframesWithDuration:0.5 delay:2.0 options:(UIViewKeyframeAnimationOptionCalculationModeLinear) animations:^{
+        self.alpha = 0;
+    } completion:^(BOOL finished) {
+        self.hidden = YES;
+        self.alpha = 1.0;
+    }];
 }
 
 - (void)playerController:(JWZPlayerController *)playerController didBufferMediaWithProgress:(CGFloat)progress {
     [self.progressSlider.progressView setProgress:progress animated:YES];
 }
 
+- (void)playerControllerDidStallPlaying:(JWZPlayerController *)playerController {
+    [self.activityIndicatorView startAnimating];
+}
+
+- (void)playerControllerDidContinuePlaying:(JWZPlayerController *)playerController {
+    [[self activityIndicatorView] stopAnimating];
+}
+
+- (void)playerControllerDidFailToPlay:(JWZPlayerController *)playerController {
+    self.durationLabel.text = 0;
+    [self playerControllerDidFinishPlaying:playerController];
+}
+
 - (void)playerControllerDidFinishPlaying:(JWZPlayerController *)playerController {
     self.playButton.selected = NO;
+    self.progressSlider.value = self.progressSlider.maximumValue;
     [self.playingProgressTimer setFireDate:[NSDate distantFuture]];
 }
 
@@ -264,6 +272,45 @@ static UIImage *UIImageFromJWZPlayerBundle(NSString *imageName) {
     // Drawing code
 }
 */
+
+#pragma mark - Properties
+
+@synthesize playingProgressTimer = _playingProgressTimer;
+
+- (NSTimer *)playingProgressTimer {
+    if (_playingProgressTimer != nil) {
+        return _playingProgressTimer;
+    }
+    return _playingProgressTimer;
+}
+
+- (void)setPlayingProgressTimer:(NSTimer *)playingProgressTimer {
+    if (_playingProgressTimer != playingProgressTimer) {
+        if (_playingProgressTimer != nil) {
+            [_playingProgressTimer invalidate];
+        }
+        _playingProgressTimer = playingProgressTimer;
+    }
+}
+
+- (UIActivityIndicatorView *)activityIndicatorView {
+    if (_activityIndicatorView != nil) {
+        return _activityIndicatorView;
+    }
+    UIActivityIndicatorView *activityIndicatorView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:(UIActivityIndicatorViewStyleWhiteLarge)];
+    activityIndicatorView.hidesWhenStopped = YES;
+    activityIndicatorView.backgroundColor = [UIColor colorWithWhite:0.5 alpha:0.5];
+    [self insertSubview:activityIndicatorView atIndex:0];
+    
+    activityIndicatorView.translatesAutoresizingMaskIntoConstraints = NO;
+    NSArray *consts1 = [NSLayoutConstraint constraintsWithVisualFormat:@"H:|[activityIndicatorView]|" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(activityIndicatorView)];
+    NSArray *consts2 = [NSLayoutConstraint constraintsWithVisualFormat:@"V:|[activityIndicatorView]|" options:(NSLayoutFormatAlignAllLeft) metrics:nil views:NSDictionaryOfVariableBindings(activityIndicatorView)];
+    [self addConstraints:consts1];
+    [self addConstraints:consts2];
+    
+    _activityIndicatorView = activityIndicatorView;
+    return _activityIndicatorView;
+}
 
 @end
 

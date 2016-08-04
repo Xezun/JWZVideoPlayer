@@ -35,6 +35,8 @@
     
     self.playerController = [[JWZPlayerController alloc] init];
     self.playerController.delegate = self;
+    
+
 }
 
 - (void)didReceiveMemoryWarning {

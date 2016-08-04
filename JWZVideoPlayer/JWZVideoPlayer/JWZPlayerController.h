@@ -137,7 +137,11 @@ typedef NS_ENUM(NSInteger, JWZPlayerControllerDisplayMode) {
 @protocol JWZPlayerControllerPlaybackControls <NSObject>
 
 @optional
+- (void)playerControllerWillStartPlaying:(JWZPlayerController * _Nonnull)playerController;
 - (void)playerController:(JWZPlayerController * _Nonnull)playerController didStartPlayingMediaWithDuration:(NSTimeInterval)duration;
+- (void)playerControllerDidStallPlaying:(JWZPlayerController * _Nonnull)playerController;
+- (void)playerControllerDidContinuePlaying:(JWZPlayerController * _Nonnull)playerController;
+- (void)playerControllerDidFailToPlay:(JWZPlayerController * _Nonnull)playerController;
 - (void)playerController:(JWZPlayerController * _Nonnull)playerController didBufferMediaWithProgress:(CGFloat)progress;
 - (void)playerControllerDidFinishPlaying:(JWZPlayerController * _Nonnull)playerController;
 

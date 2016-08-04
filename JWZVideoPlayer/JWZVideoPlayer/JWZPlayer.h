@@ -20,7 +20,9 @@ typedef NS_ENUM(NSInteger, JWZPlayerStatus) {
 @protocol JWZPlayerDelegate;
 @class JWZPlayerMedia;
 
-// 播放器
+/**
+ *  JWZPlayer 是将 AVPlayer 和 AVPlayerLayer 封装起来的视图。
+ */
 @interface JWZPlayer : UIView
 
 /**
@@ -29,7 +31,7 @@ typedef NS_ENUM(NSInteger, JWZPlayerStatus) {
 @property (nonatomic, readonly) JWZPlayerStatus status;
 
 /**
- *  播放器中的媒体资源。
+ *  播放器中当前的媒体资源。
  */
 @property (nonatomic, strong) JWZPlayerMedia *media;
 
@@ -40,9 +42,10 @@ typedef NS_ENUM(NSInteger, JWZPlayerStatus) {
 
 /**
  *  播放。其可能触发代理事件 -playerDidBeginPlaying: 被调用：
- *  1，播放器处于 stop 状态，如果资源准备好，立即触发代理事件；如果资源没有准备好，则在可以播放时，触发代理事件。
- *  2，播放器处于 pause 状态，不触发代理事件。
- *  3，资源不可用触发 -player:didFailToPlayWithError: 事件。
+ *  1，播放器处于 stop 状态，如果资源准备好，立即触发代理事件；
+ *  2，如果资源没有准备好，例如正在缓冲，则在资源播放时，触发代理事件；
+ *  3，播放器处于 JWZPlayerStatusPaused 状态，不触发代理事件；
+ *  4，资源不可用触发 -player:didFailToPlayWithError: 事件。
  */
 - (void)play;
 
@@ -132,10 +135,10 @@ typedef NS_ENUM(NSInteger, JWZPlayerStatus) {
  *  JWZPlayerMedia 的状态
  */
 typedef NS_ENUM(NSInteger, JWZPlayerMediaStatus) {
-    JWZPlayerMediaStatusNewMedia, // 新媒体载入
-    JWZPlayerMediaStatusAvailable, // 可以播放
-    JWZPlayerMediaStatusBuffering, // 缓冲中
-    JWZPlayerMediaStatusUnavailable //不可用
+    JWZPlayerMediaStatusUnavailable = 0, // 不可用
+    JWZPlayerMediaStatusNewMedia,        // 新媒体载入
+    JWZPlayerMediaStatusAvailable,       // 可以播放
+    JWZPlayerMediaStatusBuffering        // 缓冲中
 };
 
 @protocol JWZPlayerMediaDelegate <NSObject>
@@ -166,7 +169,7 @@ typedef NS_ENUM(NSInteger, JWZPlayerMediaStatus) {
 @property (nonatomic, strong) NSURL *resourceURL;
 
 + (instancetype)playerMediaWithResourceURL:(NSURL *)resourceURL;
-- (instancetype)initWithResourceURL:(NSURL *)resourceURL;
+- (instancetype)initWithResourceURL:(NSURL *)resourceURL NS_DESIGNATED_INITIALIZER;
 
 /**
  *  获取媒体资源时长的方法。
