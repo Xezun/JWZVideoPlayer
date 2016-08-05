@@ -20,7 +20,8 @@
 		3161DBC61C954EDB00F67B29 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3161DBC41C954EDB00F67B29 /* AVFoundation.framework */; };
 		3161DBC71C954EDB00F67B29 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3161DBC51C954EDB00F67B29 /* AVKit.framework */; };
 		C41476691D3F5CB0006FE7FB /* JWZPlayer.bundle in Resources */ = {isa = PBXBuildFile; fileRef = C41476681D3F5CB0006FE7FB /* JWZPlayer.bundle */; };
-		C428E26B1D405A1E0019D21C /* JWZPlayerControllerPlaybackControls.m in Sources */ = {isa = PBXBuildFile; fileRef = C428E26A1D405A1E0019D21C /* JWZPlayerControllerPlaybackControls.m */; };
+		C428E26B1D405A1E0019D21C /* JWZPlayerPlaybackControls.m in Sources */ = {isa = PBXBuildFile; fileRef = C428E26A1D405A1E0019D21C /* JWZPlayerPlaybackControls.m */; };
+		DD7715ED1D548CD000CB3A6D /* video.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = DD7715EC1D548CD000CB3A6D /* video.mp4 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,8 +46,9 @@
 		3161DBC41C954EDB00F67B29 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		3161DBC51C954EDB00F67B29 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		C41476681D3F5CB0006FE7FB /* JWZPlayer.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = JWZPlayer.bundle; sourceTree = "<group>"; };
-		C428E2691D405A1E0019D21C /* JWZPlayerControllerPlaybackControls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JWZPlayerControllerPlaybackControls.h; sourceTree = "<group>"; };
-		C428E26A1D405A1E0019D21C /* JWZPlayerControllerPlaybackControls.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JWZPlayerControllerPlaybackControls.m; sourceTree = "<group>"; };
+		C428E2691D405A1E0019D21C /* JWZPlayerPlaybackControls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JWZPlayerPlaybackControls.h; sourceTree = "<group>"; };
+		C428E26A1D405A1E0019D21C /* JWZPlayerPlaybackControls.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JWZPlayerPlaybackControls.m; sourceTree = "<group>"; };
+		DD7715EC1D548CD000CB3A6D /* video.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = video.mp4; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,12 +96,13 @@
 		3161DBA31C954DB600F67B29 /* JWZVideoPlayer */ = {
 			isa = PBXGroup;
 			children = (
+				3161DBBB1C954DE100F67B29 /* JWZVideoPlayer */,
 				3161DBA71C954DB600F67B29 /* AppDelegate.h */,
 				3161DBA81C954DB600F67B29 /* AppDelegate.m */,
 				3161DBAA1C954DB600F67B29 /* ViewController.h */,
 				3161DBAB1C954DB600F67B29 /* ViewController.m */,
+				DD7715EB1D548CC000CB3A6D /* Resource */,
 				314BE8FF1C96D89000519CA8 /* DACircularProgress */,
-				3161DBBB1C954DE100F67B29 /* JWZVideoPlayer */,
 				3161DBAD1C954DB600F67B29 /* Main.storyboard */,
 				3161DBB01C954DB600F67B29 /* Assets.xcassets */,
 				3161DBB21C954DB600F67B29 /* LaunchScreen.storyboard */,
@@ -122,13 +125,21 @@
 			children = (
 				3161DBBC1C954E0500F67B29 /* JWZPlayerController.h */,
 				3161DBBD1C954E0500F67B29 /* JWZPlayerController.m */,
-				C428E2691D405A1E0019D21C /* JWZPlayerControllerPlaybackControls.h */,
-				C428E26A1D405A1E0019D21C /* JWZPlayerControllerPlaybackControls.m */,
+				C428E2691D405A1E0019D21C /* JWZPlayerPlaybackControls.h */,
+				C428E26A1D405A1E0019D21C /* JWZPlayerPlaybackControls.m */,
 				3161DBC11C954E3900F67B29 /* JWZPlayer.h */,
 				3161DBC21C954E3900F67B29 /* JWZPlayer.m */,
 				C41476681D3F5CB0006FE7FB /* JWZPlayer.bundle */,
 			);
 			path = JWZVideoPlayer;
+			sourceTree = "<group>";
+		};
+		DD7715EB1D548CC000CB3A6D /* Resource */ = {
+			isa = PBXGroup;
+			children = (
+				DD7715EC1D548CD000CB3A6D /* video.mp4 */,
+			);
+			name = Resource;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -189,6 +200,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C41476691D3F5CB0006FE7FB /* JWZPlayer.bundle in Resources */,
+				DD7715ED1D548CD000CB3A6D /* video.mp4 in Resources */,
 				3161DBB41C954DB600F67B29 /* LaunchScreen.storyboard in Resources */,
 				3161DBB11C954DB600F67B29 /* Assets.xcassets in Resources */,
 				3161DBAF1C954DB600F67B29 /* Main.storyboard in Resources */,
@@ -209,7 +221,7 @@
 				314BE9051C96D89000519CA8 /* DALabeledCircularProgressView.m in Sources */,
 				3161DBBF1C954E0500F67B29 /* JWZPlayerController.m in Sources */,
 				3161DBC31C954E3900F67B29 /* JWZPlayer.m in Sources */,
-				C428E26B1D405A1E0019D21C /* JWZPlayerControllerPlaybackControls.m in Sources */,
+				C428E26B1D405A1E0019D21C /* JWZPlayerPlaybackControls.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

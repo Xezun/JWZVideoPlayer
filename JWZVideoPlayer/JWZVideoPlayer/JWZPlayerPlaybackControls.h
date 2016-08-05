@@ -1,5 +1,5 @@
 //
-//  JWZPlayerControllerPlaybackControls.h
+//  JWZPlayerPlaybackControls.h
 //  JWZVideoPlayer
 //
 //  Created by iMac on 16/7/21.
@@ -12,7 +12,7 @@
 /**
  *  播放控制界面。
  */
-@interface JWZPlayerControllerPlaybackControls : UIView <JWZPlayerControllerPlaybackControls>
+@interface JWZPlayerPlaybackControls : UIView <JWZPlayerPlaybackControls>
 
 @property (nonatomic, weak) JWZPlayerController *playerController;
 

@@ -26,29 +26,18 @@
 #pragma mark - JWZPlayerMedia ()
 #pragma mark - =================
 
+@protocol JWZPlayerMediaDelegate <NSObject>
+
+- (void)playerMediaStatusDidChange:(JWZPlayerMedia *)media;
+- (void)playerMedia:(JWZPlayerMedia *)media didBufferWithProgress:(CGFloat)progress;
+
+@end
+
 @interface JWZPlayerMedia ()
 
-/**
- *  设置 status 属性会同时触发代理事件
- */
-@property (nonatomic) JWZPlayerMediaStatus status;
-
 @property (nonatomic, weak) id<JWZPlayerMediaDelegate> delegate;
-
-/**
- *  设置 playerItem 属性会同时监听它的状态
- */
-@property (nonatomic, strong) AVPlayerItem *playerItem;
-
-- (JWZPlayerMediaStatus)status;
-- (void)setStatus:(JWZPlayerMediaStatus)status;
-
-/**
- *  媒体资源播放进度移动到开始。
- *
- *  @param completionHandler 如果执行操作时，已有正在进行的操作，block 会立即执行，finished = NO；如果操作没有被别的操作所打断，block 在执行时，finished = YES 。
- */
-- (void)moveToStartTime:(void (^)(BOOL finished))completionHandler;
+@property (nonatomic, strong, readonly) AVPlayerItem *playerItem;
+@property (nonatomic, strong) NSError *error;
 
 @end
 
@@ -136,7 +125,7 @@ IB_DESIGNABLE @interface JWZPlayer () <JWZPlayerMediaDelegate>
 #pragma mark - 主要方法，对外方法
 
 - (void)play {
-    if (self.media != nil && self.media.status != JWZPlayerMediaStatusUnavailable) {
+    if (self.media.playerItem != nil) {
         switch (self.status) {
             case JWZPlayerStatusStopped: {  // 播放器当前处于停止状态
                 switch (self.media.status) {
@@ -145,14 +134,14 @@ IB_DESIGNABLE @interface JWZPlayer () <JWZPlayerMediaDelegate>
                             if (finished) {
                                 [self registerForAVPlayerItemNotification];
                                 [self.player play];
-                                [self _JWZPlayer_AVPlayerDidBeginPlaying];
+                                [self JWZPlayer_AVPlayerDidBeginPlaying];
                             }
                         }];
                         break;
                     }
                     case JWZPlayerMediaStatusUnavailable: { // 资源无法播放
                         if (self.delegate != nil && [self.delegate respondsToSelector:@selector(player:didFailToPlayWithError:)]) {
-                            [self.delegate player:self didFailToPlayWithError:[self.media.playerItem error]];
+                            [self.delegate player:self didFailToPlayWithError:[self.media error]];
                         }
                         break;
                     }
@@ -174,13 +163,17 @@ IB_DESIGNABLE @interface JWZPlayer () <JWZPlayerMediaDelegate>
             default:
                 break;
         }
+    } else {
+        if (self.delegate != nil && [self.delegate respondsToSelector:@selector(player:didFailToPlayWithError:)]) {
+            [self.delegate player:self didFailToPlayWithError:[self.media error]];
+        }
     }
 }
 
 /**
  *  播放器开始播放了。视频资源可用，真的开始播放了
  */
-- (void)_JWZPlayer_AVPlayerDidBeginPlaying {
+- (void)JWZPlayer_AVPlayerDidBeginPlaying {
     self.status = JWZPlayerStatusPlaying;  // 先改状态，然后启动播放
     if (self.delegate != nil && [self.delegate respondsToSelector:@selector(playerDidStartPlaying:)]) {
         [self.delegate playerDidStartPlaying:self];
@@ -235,13 +228,13 @@ IB_DESIGNABLE @interface JWZPlayer () <JWZPlayerMediaDelegate>
  */
 - (void)registerForAVPlayerItemNotification {
     NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-    [notificationCenter addObserver:self selector:@selector(_JWZPlayer_AVPlayerItemDidPlayToEndTime:)
+    [notificationCenter addObserver:self selector:@selector(JWZPlayer_AVPlayerItemDidPlayToEndTime:)
                                name:AVPlayerItemDidPlayToEndTimeNotification object:nil];
-    [notificationCenter addObserver:self selector:@selector(_JWZPlayer_AVPlayerItemFailedToPlayToEndTime:)
+    [notificationCenter addObserver:self selector:@selector(JWZPlayer_AVPlayerItemFailedToPlayToEndTime:)
                                name:AVPlayerItemFailedToPlayToEndTimeNotification object:nil];
-    [notificationCenter addObserver:self selector:@selector(_JWZPlayer_AVPlayerItemPlaybackStalled:)
+    [notificationCenter addObserver:self selector:@selector(JWZPlayer_AVPlayerItemPlaybackStalled:)
                                name:AVPlayerItemPlaybackStalledNotification object:nil];
-    [notificationCenter addObserver:self selector:@selector(_JWZPlayer_AVPlayerItemTimeJumped:)
+    [notificationCenter addObserver:self selector:@selector(JWZPlayer_AVPlayerItemTimeJumped:)
                                name:AVPlayerItemTimeJumpedNotification object:nil];
 }
 
@@ -252,7 +245,7 @@ IB_DESIGNABLE @interface JWZPlayer () <JWZPlayerMediaDelegate>
 #pragma mark - AVPlayerItem Notifications
 
 // 播放完成
-- (void)_JWZPlayer_AVPlayerItemDidPlayToEndTime:(NSNotification *)notification {
+- (void)JWZPlayer_AVPlayerItemDidPlayToEndTime:(NSNotification *)notification {
     [self unregisterAVPlayerItemNotification];
     [[self player] pause];
     self.status = JWZPlayerStatusStopped;
@@ -262,17 +255,17 @@ IB_DESIGNABLE @interface JWZPlayer () <JWZPlayerMediaDelegate>
 }
 
 // 播放失败
-- (void)_JWZPlayer_AVPlayerItemFailedToPlayToEndTime:(NSNotification *)notification {
+- (void)JWZPlayer_AVPlayerItemFailedToPlayToEndTime:(NSNotification *)notification {
     [self unregisterAVPlayerItemNotification];
     [[self player] pause];
     self.status = JWZPlayerStatusStopped;
     if (self.delegate != nil && [self.delegate respondsToSelector:@selector(player:didFailToPlayWithError:)]) {
-        [self.delegate player:self didFailToPlayWithError:[[[self media] playerItem] error]];
+        [self.delegate player:self didFailToPlayWithError:[[self media] error]];
     }
 }
 
 // 播放停滞了
-- (void)_JWZPlayer_AVPlayerItemPlaybackStalled:(NSNotification *)notification {
+- (void)JWZPlayer_AVPlayerItemPlaybackStalled:(NSNotification *)notification {
     [[self player] pause];
     self.status = JWZPlayerStatusStalled;
     if (self.delegate != nil && [self.delegate respondsToSelector:@selector(playerDidStallPlaying:)]) {
@@ -281,7 +274,7 @@ IB_DESIGNABLE @interface JWZPlayer () <JWZPlayerMediaDelegate>
 }
 
 // 播放时间跳跃了
-- (void)_JWZPlayer_AVPlayerItemTimeJumped:(NSNotification *)notification {
+- (void)JWZPlayer_AVPlayerItemTimeJumped:(NSNotification *)notification {
     if (self.delegate != nil && [self.delegate respondsToSelector:@selector(playerDidJumpTime:)]) {
         [self.delegate playerDidJumpTime:self];
     }
@@ -299,7 +292,7 @@ IB_DESIGNABLE @interface JWZPlayer () <JWZPlayerMediaDelegate>
                 case JWZPlayerStatusStalled:  // 当前是缓冲状态，直接进入播放状态
                 case JWZPlayerStatusWaiting: {// 当前是等待状态，直接进入播放状态
                     [self.player play];
-                    [self _JWZPlayer_AVPlayerDidBeginPlaying];
+                    [self JWZPlayer_AVPlayerDidBeginPlaying];
                     break;
                 }
                 default:
@@ -310,10 +303,10 @@ IB_DESIGNABLE @interface JWZPlayer () <JWZPlayerMediaDelegate>
         case JWZPlayerMediaStatusBuffering:     // 正在缓冲
             break;
         case JWZPlayerMediaStatusUnavailable: {  // 资源不可用
-            if (self.status == JWZPlayerStatusStopped) {
+            if (self.status != JWZPlayerStatusStopped) {
                 [self stop];
                 if (self.delegate != nil && [self.delegate respondsToSelector:@selector(player:didFailToPlayWithError:)]) {
-                    [self.delegate player:self didFailToPlayWithError:[self.media.playerItem error]];
+                    [self.delegate player:self didFailToPlayWithError:[self.media error]];
                 }
             }
             break;
@@ -375,96 +368,89 @@ static NSString *const kJWZObservedAVPlayerItemProperties[_JWZNumberOfOberserved
     self = [super init];
     if (self != nil) {
         _resourceURL = resourceURL;
-        if (resourceURL != nil) {
-            AVPlayerItem *playerItem = [AVPlayerItem playerItemWithURL:resourceURL];
-            if (playerItem != nil) {
-                if (playerItem.status != AVPlayerItemStatusFailed) {
-                    if ([playerItem isPlaybackBufferFull]) {
-                        _status = JWZPlayerMediaStatusAvailable;
-                        NSArray<NSValue *> *seekableTimeRanges = [playerItem seekableTimeRanges];
-                        if (seekableTimeRanges.count > 0) {
-                            CMTime startTime = [[seekableTimeRanges firstObject] CMTimeRangeValue].start;
-                            [playerItem seekToTime:startTime];
-                        }
-                    } else {
-                        _status = JWZPlayerMediaStatusNewMedia;
-                    }
-                }
-                _playerItem = playerItem;
-            }
-        } else {
-            _status = JWZPlayerMediaStatusUnavailable;
+        if (_resourceURL != nil) {
+            _status = JWZPlayerMediaStatusNewMedia;
         }
     }
     return self;
 }
 
-- (void)JWZPlayerMedia_resourceURLDidChange {
-    if (_resourceURL == nil) {
-        self.playerItem = nil;
-        self.status = JWZPlayerMediaStatusUnavailable;
-    } else {
-        AVPlayerItem *playerItem = [AVPlayerItem playerItemWithURL:_resourceURL];
-        [self setPlayerItem:playerItem];
-        if (playerItem == nil) {
-            self.status = JWZPlayerMediaStatusUnavailable;
-        } else if (playerItem.status == AVPlayerItemStatusReadyToPlay) {
-            self.status = JWZPlayerMediaStatusNewMedia;
-            if ([playerItem isPlaybackBufferFull]) {
-                NSArray<NSValue *> *seekableTimeRanges = playerItem.seekableTimeRanges;
-                if (seekableTimeRanges != nil && seekableTimeRanges.count > 0) {
-                    CMTime time = [[seekableTimeRanges firstObject] CMTimeRangeValue].start;
-                    if (CMTIME_IS_VALID(time)) {
-                        [playerItem seekToTime:time];
-                    }
-                }
-                self.status = JWZPlayerMediaStatusAvailable;
-            } else {
-                self.status = JWZPlayerMediaStatusBuffering;
-            }
-        } else if (playerItem.status == AVPlayerItemStatusFailed) {
-            self.status = JWZPlayerMediaStatusUnavailable;
+- (void)replaceMediaResourceWithURL:(NSURL *)resourceURL {
+    if (_resourceURL != resourceURL) {
+        _resourceURL = resourceURL;
+        [self JWZPlayerMedia_updatePlayerItem:nil];
+        if (_resourceURL != nil) {
+            [self JWZPlayerMedia_updateMediastatus:(JWZPlayerMediaStatusNewMedia)];
+        } else {
+            _error = [NSError errorWithDomain:AVFoundationErrorDomain code:AVErrorInvalidSourceMedia userInfo:nil];
+            [self JWZPlayerMedia_updateMediastatus:(JWZPlayerMediaStatusUnavailable)];
         }
     }
 }
 
-- (void)setResourceURL:(NSURL *)resourceURL {
-    if (_resourceURL != resourceURL) {
-        _resourceURL = resourceURL;
-        [self JWZPlayerMedia_resourceURLDidChange];
+- (void)JWZPlayerMedia_updateMediastatus:(JWZPlayerMediaStatus)status {
+    _status = status;
+    if (_delegate != nil) {
+        [_delegate playerMediaStatusDidChange:self];
     }
 }
 
-- (void)_JWZPlayerMedia_statusDidChange {
-    if (self.delegate != nil) {
-        [self.delegate playerMediaStatusDidChange:self];
-    }
-}
-
-- (void)setStatus:(JWZPlayerMediaStatus)status {
-    if (_status != status) {
-        _status = status;
-        [self _JWZPlayerMedia_statusDidChange];
-    }
-}
-
-- (void)_JWZPlayerMedia_playerItemWillChange {
+- (void)JWZPlayerMedia_playerItemWillChange {
     if (_playerItem != nil) {
         [self stopObservingAVPlayerItemStatus:_playerItem];
     }
 }
 
-- (void)_JWZPlayerMedia_playerItemDidChange {
+- (void)JWZPlayerMedia_playerItemDidChange {
     if (_playerItem != nil) {
         [self startObservingAVPlayerItemStatus:_playerItem];
     }
 }
 
-- (void)setPlayerItem:(AVPlayerItem *)playerItem {
+@synthesize playerItem = _playerItem;
+
+- (AVPlayerItem *)playerItem {
+    if (_playerItem != nil) {
+        return _playerItem;
+    }
+    [self JWZPlayerMedia_updatePlayerItem:[AVPlayerItem playerItemWithURL:_resourceURL]];
+    if (_playerItem != nil) { // 新媒体载入
+        // 获取初始状态
+        if (_playerItem.status != AVPlayerItemStatusFailed) {
+            [self JWZPlayerMedia_updateMediastatus:(JWZPlayerMediaStatusNewMedia)];
+            if ([_playerItem isPlaybackLikelyToKeepUp]) {
+                NSArray<NSValue *> *seekableTimeRanges = [_playerItem seekableTimeRanges];
+                if (seekableTimeRanges.count > 0) {
+                    CMTime startTime = [[seekableTimeRanges firstObject] CMTimeRangeValue].start;
+                    [_playerItem seekToTime:startTime completionHandler:^(BOOL finished) {
+                        JWZPlayerDebugLog(@"新媒体载入");
+                        [self JWZPlayerMedia_updateMediastatus:JWZPlayerMediaStatusAvailable];
+                    }];
+                }
+            }
+        } else {
+            _error = _playerItem.error;
+            [self JWZPlayerMedia_updatePlayerItem:nil];
+            [self JWZPlayerMedia_updateMediastatus:(JWZPlayerMediaStatusUnavailable)];
+        }
+    } else {
+        _error = _playerItem.error;
+        [self JWZPlayerMedia_updatePlayerItem:nil];
+        [self JWZPlayerMedia_updateMediastatus:(JWZPlayerMediaStatusUnavailable)];
+    }
+    return _playerItem;
+}
+
+/**
+ *  更新 AVPlayerItem 。停止对旧的 Item 的监控，并开始监控新的 Item 的状态。
+ *
+ *  @param playerItem AVPlayerItem 对象。
+ */
+- (void)JWZPlayerMedia_updatePlayerItem:(AVPlayerItem *)playerItem {
     if (_playerItem != playerItem) {
-        [self _JWZPlayerMedia_playerItemWillChange];
+        [self JWZPlayerMedia_playerItemWillChange];
         _playerItem = playerItem;
-        [self _JWZPlayerMedia_playerItemDidChange];
+        [self JWZPlayerMedia_playerItemDidChange];
     }
 }
 
@@ -499,14 +485,16 @@ static NSString *const kJWZObservedAVPlayerItemProperties[_JWZNumberOfOberserved
             if (playerItem.status == AVPlayerItemStatusReadyToPlay) {
                 if (playerItem.isPlaybackLikelyToKeepUp) {
                     JWZPlayerDebugLog(@"Media：JWZPlayerMediaStatusAvailable");
-                    self.status = JWZPlayerMediaStatusAvailable;
+                    [self JWZPlayerMedia_updateMediastatus:(JWZPlayerMediaStatusAvailable)];
                 } else {
                     JWZPlayerDebugLog(@"Media：JWZPlayerMediaStatusBuffering");
-                    self.status = JWZPlayerMediaStatusBuffering;
+                    [self JWZPlayerMedia_updateMediastatus:(JWZPlayerMediaStatusBuffering)];
                 }
             } else if (playerItem.status == AVPlayerItemStatusFailed) {
                 JWZPlayerDebugLog(@"Media：JWZPlayerMediaStatusUnavailable");
-                self.status = JWZPlayerMediaStatusUnavailable;
+                _error = _playerItem.error;
+                [self JWZPlayerMedia_updatePlayerItem:nil];
+                [self JWZPlayerMedia_updateMediastatus:(JWZPlayerMediaStatusUnavailable)];
             }
         } else if ([keyPath isEqualToString:kJWZObservedAVPlayerItemProperties[_JWZOberservedAVPlayerItemPropertyLoadedTimeRanges]]) {
             if (self.delegate != nil) {
@@ -523,12 +511,12 @@ static NSString *const kJWZObservedAVPlayerItemProperties[_JWZNumberOfOberserved
         } else if ([keyPath isEqualToString:kJWZObservedAVPlayerItemProperties[_JWZOberservedAVPlayerItemPropertyPlaybackBufferEmpty]]) {
             if ([[self playerItem] isPlaybackBufferEmpty]) {
                 JWZPlayerDebugLog(@"Media：JWZPlayerMediaStatusBuffering");
-                self.status = JWZPlayerMediaStatusBuffering;
+                [self JWZPlayerMedia_updateMediastatus:(JWZPlayerMediaStatusBuffering)];
             }
         } else if ([keyPath isEqualToString:kJWZObservedAVPlayerItemProperties[_JWZOberservedAVPlayerItemPropertyPlaybackLicklyToKeepUp]]) {
             if ([[self playerItem] isPlaybackLikelyToKeepUp]) {
                 JWZPlayerDebugLog(@"Media：JWZPlayerMediaStatusAvailable");
-                self.status = JWZPlayerMediaStatusAvailable;
+                [self JWZPlayerMedia_updateMediastatus:(JWZPlayerMediaStatusAvailable)];
             }
         }
     }

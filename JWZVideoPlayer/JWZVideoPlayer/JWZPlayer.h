@@ -141,13 +141,6 @@ typedef NS_ENUM(NSInteger, JWZPlayerMediaStatus) {
     JWZPlayerMediaStatusBuffering        // 缓冲中
 };
 
-@protocol JWZPlayerMediaDelegate <NSObject>
-
-- (void)playerMediaStatusDidChange:(JWZPlayerMedia *)media;
-- (void)playerMedia:(JWZPlayerMedia *)media didBufferWithProgress:(CGFloat)progress;
-
-@end
-
 /**
  *  该类的主要作用是自动创建 AVPlayerItem 并监视其状态，并将其状态返回给 JWZPlayer 。
  */
@@ -159,14 +152,9 @@ typedef NS_ENUM(NSInteger, JWZPlayerMediaStatus) {
 @property (nonatomic, readonly) JWZPlayerMediaStatus status;
 
 /**
- *  代理，接受状态事件。
- */
-@property (nonatomic, weak, readonly) id<JWZPlayerMediaDelegate> delegate;
-
-/**
  *  媒体资源的链接。JWZPlayerMedia 对象并不比较新旧 resourceURL 的实际链接是否相同。
  */
-@property (nonatomic, strong) NSURL *resourceURL;
+@property (nonatomic, strong, readonly) NSURL *resourceURL;
 
 + (instancetype)playerMediaWithResourceURL:(NSURL *)resourceURL;
 - (instancetype)initWithResourceURL:(NSURL *)resourceURL NS_DESIGNATED_INITIALIZER;
@@ -177,6 +165,21 @@ typedef NS_ENUM(NSInteger, JWZPlayerMediaStatus) {
  *  @return 媒体资源时长，以秒为单位。
  */
 - (NSTimeInterval)duration;
+
+/**
+ *  替换正在播放的媒体资源。
+ *
+ *  @param resourceURL 媒体资源的URL
+ */
+- (void)replaceMediaResourceWithURL:(NSURL *)resourceURL;
+
+/**
+ *  媒体资源播放进度移动到开始。
+ *
+ *  @param completionHandler 如果执行操作时，已有正在进行的操作，block 会立即执行，finished = NO；
+ *                           如果操作没有被别的操作所打断，block 在执行时，finished = YES 。
+ */
+- (void)moveToStartTime:(void (^)(BOOL finished))completionHandler;
 
 @end
 

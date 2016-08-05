@@ -9,6 +9,7 @@
 #import "ViewController.h"
 #import "JWZPlayerController.h"
 
+@import AVFoundation;
 @import AVKit;
 
 @interface ViewController () <JWZPlayerControllerDelegate>
@@ -28,15 +29,29 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    // RTMP
 //    AVPlayerViewController
     // @"";http://mp4.68mtv.com/mp42/53184-%E5%AE%8B%E7%A5%96%E8%8B%B1-%E5%BD%A9%E9%BE%99%E8%88%9E%E4%B8%9C%E6%96%B9[68mtv.com].mp4
-    self.videoURL = [NSURL URLWithString:@"http://funsbar.file.alimmdn.com/video/activity/20160312114630732.mp4"];
+    //NSString *netUrl1 = @"http://mp4.68mtv.com/mp42/53184-%E5%AE%8B%E7%A5%96%E8%8B%B1-%E5%BD%A9%E9%BE%99%E8%88%9E%E4%B8%9C%E6%96%B9[68mtv.com].mp4";
+    NSString *netUrl2 = @"http://funsbar.file.alimmdn.com/video/activity/20160312114630732.mp4";
+    self.videoURL = [NSURL URLWithString:netUrl2];
+    
+//    self.videoURL = [[NSBundle mainBundle] URLForResource:@"video" withExtension:@"mp4"];;
     self.videoPlayView = self.playerAvatar;
     
     self.playerController = [[JWZPlayerController alloc] init];
     self.playerController.delegate = self;
     
 
+}
+
+- (void)viewDidAppear:(BOOL)animated {
+    [super viewDidAppear:animated];
+    
+//    AVPlayerViewController *av = [[AVPlayerViewController alloc] init];
+//    AVPlayer *player = [AVPlayer playerWithURL:self.videoURL];
+//    av.player = player;
+//    [self presentViewController:av animated:YES completion:NULL];
 }
 
 - (void)didReceiveMemoryWarning {

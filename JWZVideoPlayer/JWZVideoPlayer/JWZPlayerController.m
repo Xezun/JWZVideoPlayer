@@ -7,7 +7,7 @@
 //
 
 #import "JWZPlayerController.h"
-#import "JWZPlayerControllerPlaybackControls.h"
+#import "JWZPlayerPlaybackControls.h"
 
 static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.50;
 
@@ -105,7 +105,7 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.50;
         if (media == nil) {
             media = [JWZPlayerMedia playerMediaWithResourceURL:_mediaURL];
         } else {
-            media.resourceURL = _mediaURL;
+            [media replaceMediaResourceWithURL:_mediaURL];
         }
         self.player.media = media;
     }
@@ -113,7 +113,7 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.50;
 
 @synthesize playbackControls = _playbackControls;
 
-- (void)setPlaybackControls:(__kindof UIView<JWZPlayerControllerPlaybackControls> *)playbackControls {
+- (void)setPlaybackControls:(__kindof UIView<JWZPlayerPlaybackControls> *)playbackControls {
     if (_playbackControls != playbackControls) {
         if (_playbackControls != nil) {
             [_playbackControls removeFromSuperview];
@@ -132,11 +132,11 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.50;
     }
 }
 
-- (UIView<JWZPlayerControllerPlaybackControls> *)playbackControls {
+- (UIView<JWZPlayerPlaybackControls> *)playbackControls {
     if (_playbackControls != nil) {
         return _playbackControls;
     }
-    JWZPlayerControllerPlaybackControls *controls = [[JWZPlayerControllerPlaybackControls alloc] init];
+    JWZPlayerPlaybackControls *controls = [[JWZPlayerPlaybackControls alloc] init];
     controls.playerController = self;
     [self setPlaybackControls:controls];
     return _playbackControls;
@@ -151,19 +151,24 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.50;
 - (void)_JWZPlayerController_displayPlayerOverView:(UIView *)view animated:(BOOL)animated {
     if (self.presentingViewController != nil) {  // 当前是全屏模式
         if (self.presentingViewController.view.window == view.window) {  // 处于同一个 window
-            [UIView animateWithDuration:kJWZPlayerControllerAnimationDefaultDuration animations:^{
-                // 把播放器缩放到目的视图的位置
-                CGRect viewFrame = view.frame;
-                self.view.frame = CGRectMake(CGRectGetMidX(viewFrame) - CGRectGetHeight(viewFrame) / 2.0, CGRectGetMidY(viewFrame) - CGRectGetWidth(viewFrame) / 2.0, CGRectGetHeight(viewFrame), CGRectGetWidth(viewFrame));// [view.superview convertRect:view.frame toView:view.window];
-                [self.view layoutIfNeeded];
-                self.view.transform = CGAffineTransformIdentity;
-            } completion:^(BOOL finished) {
-                [self dismissViewControllerAnimated:NO completion:^{
-                    // 将播放器放到目的视图上
-                    self.view.frame = view.bounds;
-                    [view addSubview:self.view];
+            if (animated) {
+                [UIView animateWithDuration:kJWZPlayerControllerAnimationDefaultDuration animations:^{
+                    // 把播放器缩放到目的视图的位置
+                    CGRect viewFrame = view.frame;
+                    self.view.frame = CGRectMake(CGRectGetMidX(viewFrame) - CGRectGetHeight(viewFrame) / 2.0, CGRectGetMidY(viewFrame) - CGRectGetWidth(viewFrame) / 2.0, CGRectGetHeight(viewFrame), CGRectGetWidth(viewFrame));// [view.superview convertRect:view.frame toView:view.window];
+                    [self.view layoutIfNeeded];
+                    self.view.transform = CGAffineTransformIdentity;
+                } completion:^(BOOL finished) {
+                    [self dismissViewControllerAnimated:NO completion:^{
+                        // 将播放器放到目的视图上
+                        self.view.frame = view.bounds;
+                        [view addSubview:self.view];
+                    }];
                 }];
-            }];
+            } else {
+                self.view.frame = view.bounds;
+                [view addSubview:self.view];
+            }
         } else {
             [self dismissViewControllerAnimated:NO completion:^{
                 self.view.frame = view.bounds;
@@ -172,25 +177,30 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.50;
         }
     } else { // 当前是窗口嵌入模式
         if (self.view.window == view.window) { // 如果播放器开始所处 window 与目的视图 window 相同
-            // 将播放器放到 window 上
-            self.view.frame = [self.view.superview convertRect:self.view.frame toView:self.view.window];
-            [self.view.window addSubview:self.view];
-            
-            [UIView animateWithDuration:kJWZPlayerControllerAnimationDefaultDuration animations:^{
-                // 将播放器移动到目的视图位置
-                [self.view layoutIfNeeded];
-                self.view.frame = [view.superview convertRect:view.frame toView:view.window];
-            } completion:^(BOOL finished) {
+            if (animated) {
+                // 将播放器放到 window 上
+                self.view.frame = [self.view.superview convertRect:self.view.frame toView:self.view.window];
+                [self.view.window addSubview:self.view];
+                
+                [UIView animateWithDuration:kJWZPlayerControllerAnimationDefaultDuration animations:^{
+                    // 将播放器移动到目的视图位置
+                    [self.view layoutIfNeeded];
+                    self.view.frame = [view.superview convertRect:view.frame toView:view.window];
+                } completion:^(BOOL finished) {
+                    // 将播放器放置到目的视图
+                    self.view.frame = view.bounds;
+                    [view addSubview:self.view];
+                }];
+            } else {
                 // 将播放器放置到目的视图
                 self.view.frame = view.bounds;
                 [view addSubview:self.view];
-            }];
+            }
         } else { // window 不相同
             self.view.frame = view.bounds;
             [view addSubview:self.view];
         }
     }
-    
 }
 
 - (void)_JWZPlayerController_presentPlayerFromController:(UIViewController *)viewController animated:(BOOL)animated {
@@ -205,16 +215,20 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.50;
         CGRect windowBounds = self.view.window.bounds;
         CGFloat windowWidth = CGRectGetWidth(windowBounds);
         CGFloat windowHeight = CGRectGetHeight(windowBounds);
-        [UIView animateWithDuration:kJWZPlayerControllerAnimationDefaultDuration animations:^{
-            // 背景变黑并缩放到全屏
-            self.view.frame = CGRectMake((windowWidth - windowHeight) / 2.0, (windowHeight - windowWidth) / 2.0, windowHeight, windowWidth);
-            self.view.transform = CGAffineTransformMakeRotation(M_PI_2); // 旋转 90 度
-            [self.view layoutIfNeeded];
-        } completion:^(BOOL finished) {
-            // Present播放器控制器
-            NSLog(@"frame: %@", NSStringFromCGRect(self.view.frame));
+        if (animated) {
+            [UIView animateWithDuration:kJWZPlayerControllerAnimationDefaultDuration animations:^{
+                // 背景变黑并缩放到全屏
+                self.view.frame = CGRectMake((windowWidth - windowHeight) / 2.0, (windowHeight - windowWidth) / 2.0, windowHeight, windowWidth);
+                self.view.transform = CGAffineTransformMakeRotation(M_PI_2); // 旋转 90 度
+                [self.view layoutIfNeeded];
+            } completion:^(BOOL finished) {
+                // Present播放器控制器
+                // NSLog(@"frame: %@", NSStringFromCGRect(self.view.frame));
+                [viewController presentViewController:self animated:NO completion:NULL];
+            }];
+        } else {
             [viewController presentViewController:self animated:NO completion:NULL];
-        }];
+        }
     } else if (self.presentingViewController != viewController) { // 已经是全屏状态
         if (self.view.window != viewController.view.window) { // 只有在不同的 window 上才能操作
             [self.presentingViewController dismissViewControllerAnimated:NO completion:^{
@@ -227,7 +241,7 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.50;
 #pragma mark - Public Methods
 
 - (void)play {
-    if (self.playbackControls != nil && [self.playbackControls respondsToSelector:@selector(playerControllerWillStartPlaying:)]) {
+    if ((self.player.status == JWZPlayerStatusStopped) && self.playbackControls != nil && [self.playbackControls respondsToSelector:@selector(playerControllerWillStartPlaying:)]) {
         [self.playbackControls playerControllerWillStartPlaying:self];
     }
     [self.player play];
