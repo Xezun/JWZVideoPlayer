@@ -10,15 +10,15 @@
 
 // 播放器状态枚举值
 typedef NS_ENUM(NSInteger, JWZPlayerStatus) {
-    JWZPlayerStatusStopped,  // 停止
-    JWZPlayerStatusWaiting,  // 等待
+    JWZPlayerStatusStopped,  // 停止，初始状态，或资源不可播放
+    JWZPlayerStatusWaiting,  // 等待，已经开始播放，但是因为资源没有准备好，而处于等待的状态
     JWZPlayerStatusPlaying,  // 正在播放
-    JWZPlayerStatusStalled,  // 缓冲
+    JWZPlayerStatusStalled,  // 缓冲，已经开始播放，资源正在缓冲
     JWZPlayerStatusPaused    // 暂停
 };
 
 @protocol JWZPlayerDelegate;
-@class JWZPlayerMedia;
+@class JWZPlayerItem;
 
 /**
  *  JWZPlayer 是将 AVPlayer 和 AVPlayerLayer 封装起来的视图。
@@ -33,12 +33,20 @@ typedef NS_ENUM(NSInteger, JWZPlayerStatus) {
 /**
  *  播放器中当前的媒体资源。
  */
-@property (nonatomic, strong) JWZPlayerMedia *media;
+@property (nonatomic, strong) JWZPlayerItem *media;
 
 /**
  *  接收播放器事件的代理。
  */
 @property (nonatomic, weak) id<JWZPlayerDelegate> delegate;
+
+@property (nonatomic, strong, readonly) NSError *error;
+
+
+- (instancetype)initWithMediaURL:(NSURL *)mediaURL;
+
+
+- (void)replaceCurrentMediaWithURL:(NSURL *)mediaURL;
 
 /**
  *  播放。其可能触发代理事件 -playerDidBeginPlaying: 被调用：
@@ -128,35 +136,35 @@ typedef NS_ENUM(NSInteger, JWZPlayerStatus) {
 @end
 
 #pragma makr - ==============
-#pragma mark - JWZPlayerMedia
+#pragma mark - JWZPlayerItem
 #pragma makr - ==============
 
 /**
- *  JWZPlayerMedia 的状态
+ *  JWZPlayerItem 的状态
  */
-typedef NS_ENUM(NSInteger, JWZPlayerMediaStatus) {
-    JWZPlayerMediaStatusUnavailable = 0, // 不可用
-    JWZPlayerMediaStatusNewMedia,        // 新媒体载入
-    JWZPlayerMediaStatusAvailable,       // 可以播放
-    JWZPlayerMediaStatusBuffering        // 缓冲中
+typedef NS_ENUM(NSInteger, JWZPlayerItemStatus) {
+    JWZPlayerItemStatusUnavailable = 0, // 不可用
+    JWZPlayerItemStatusNewMedia,        // 新媒体载入
+    JWZPlayerItemStatusAvailable,       // 可以播放
+    JWZPlayerItemStatusBuffering        // 缓冲中
 };
 
 /**
- *  该类的主要作用是自动创建 AVPlayerItem 并监视其状态，并将其状态返回给 JWZPlayer 。
+ *  JWZPlayerItem 的作用是封装 AVPlayerItem 并监视其状态，并将其状态变化通过代理传递给 JWZPlayer 。
  */
-@interface JWZPlayerMedia : NSObject
+@interface JWZPlayerItem : NSObject
 
 /**
  *  资源状态
  */
-@property (nonatomic, readonly) JWZPlayerMediaStatus status;
+@property (nonatomic, readonly) JWZPlayerItemStatus status;
 
 /**
- *  媒体资源的链接。JWZPlayerMedia 对象并不比较新旧 resourceURL 的实际链接是否相同。
+ *  媒体资源的链接。JWZPlayerItem 对象并不比较新旧 resourceURL 的实际链接是否相同。
  */
 @property (nonatomic, strong, readonly) NSURL *resourceURL;
 
-+ (instancetype)playerMediaWithResourceURL:(NSURL *)resourceURL;
++ (instancetype)playerItemWithResourceURL:(NSURL *)resourceURL;
 - (instancetype)initWithResourceURL:(NSURL *)resourceURL NS_DESIGNATED_INITIALIZER;
 
 /**

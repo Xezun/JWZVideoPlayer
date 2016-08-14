@@ -101,9 +101,9 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.50;
 - (void)setMediaURL:(NSURL *)mediaURL {
     if (_mediaURL != mediaURL && ![_mediaURL.absoluteString isEqualToString:mediaURL.absoluteString]) {
         _mediaURL = mediaURL;
-        JWZPlayerMedia *media = self.player.media;
+        JWZPlayerItem *media = self.player.media;
         if (media == nil) {
-            media = [JWZPlayerMedia playerMediaWithResourceURL:_mediaURL];
+            media = [JWZPlayerItem playerItemWithResourceURL:_mediaURL];
         } else {
             [media replaceMediaResourceWithURL:_mediaURL];
         }
