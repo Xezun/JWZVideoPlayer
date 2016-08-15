@@ -13,6 +13,7 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.50;
 
 @interface JWZPlayerController ()
 
+@property (nonatomic) BOOL prefersStatusBarHidden;
 @property (nonatomic, strong, readonly) JWZPlayer *player;
 
 @end
@@ -70,8 +71,17 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.50;
     return NO;
 }
 
+@synthesize prefersStatusBarHidden = _prefersStatusBarHidden;
+
 - (BOOL)prefersStatusBarHidden {
-    return YES;
+    return _prefersStatusBarHidden;
+}
+
+- (void)setPrefersStatusBarHidden:(BOOL)prefersStatusBarHidden {
+    if (_prefersStatusBarHidden != prefersStatusBarHidden) {
+        _prefersStatusBarHidden = prefersStatusBarHidden;
+        [self setNeedsStatusBarAppearanceUpdate];
+    }
 }
 
 - (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation {
@@ -101,13 +111,7 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.50;
 - (void)setMediaURL:(NSURL *)mediaURL {
     if (_mediaURL != mediaURL && ![_mediaURL.absoluteString isEqualToString:mediaURL.absoluteString]) {
         _mediaURL = mediaURL;
-        JWZPlayerItem *media = self.player.media;
-        if (media == nil) {
-            media = [JWZPlayerItem playerItemWithResourceURL:_mediaURL];
-        } else {
-            [media replaceMediaResourceWithURL:_mediaURL];
-        }
-        self.player.media = media;
+        [[self player] replaceCurrentMediaWithURL:_mediaURL];
     }
 }
 
@@ -150,6 +154,7 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.50;
 
 - (void)_JWZPlayerController_displayPlayerOverView:(UIView *)view animated:(BOOL)animated {
     if (self.presentingViewController != nil) {  // 当前是全屏模式
+        self.prefersStatusBarHidden = [self.presentingViewController prefersStatusBarHidden];
         if (self.presentingViewController.view.window == view.window) {  // 处于同一个 window
             if (animated) {
                 [UIView animateWithDuration:kJWZPlayerControllerAnimationDefaultDuration animations:^{
@@ -298,7 +303,7 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.50;
 - (void)playerDidStartPlaying:(JWZPlayer *)player {
     // NSLog(@"%s", __func__);
     if (self.playbackControls != nil && [self.playbackControls respondsToSelector:@selector(playerController:didStartPlayingMediaWithDuration:)]) {
-        [self.playbackControls playerController:self didStartPlayingMediaWithDuration:player.media.duration];
+        [self.playbackControls playerController:self didStartPlayingMediaWithDuration:player.duration];
     }
 }
 
@@ -324,16 +329,16 @@ static NSTimeInterval const kJWZPlayerControllerAnimationDefaultDuration = 0.50;
 }
 
 // 播放发生错误
-- (void)player:(JWZPlayer *)player didFailToPlayWithError:(NSError *)error {
+- (void)playerDidFailToPlayToEndTime:(JWZPlayer *)player {
     if (self.playbackControls != nil && [self.playbackControls respondsToSelector:@selector(playerControllerDidFailToPlay:)]) {
         [self.playbackControls playerControllerDidFailToPlay:self];
     }
 }
 
-- (void)player:(JWZPlayer *)player didBufferMediaWithProgress:(CGFloat)progress {
-    // NSLog(@"%s, %f", __func__, progress);
-    if (self.playbackControls != nil && [self.playbackControls respondsToSelector:@selector(playerController:didBufferMediaWithProgress:)]) {
-        [self.playbackControls playerController:self didBufferMediaWithProgress:progress];
+- (void)player:(JWZPlayer *)player didLoadDuration:(NSTimeInterval)loadedDuration {
+     NSLog(@"%s, %f", __func__, loadedDuration);
+    if (self.playbackControls != nil && [self.playbackControls respondsToSelector:@selector(playerController:didLoadDuration:)]) {
+        [self.playbackControls playerController:self didLoadDuration:loadedDuration];
     }
 }
 

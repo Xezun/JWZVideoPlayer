@@ -27,13 +27,14 @@ static UIImage *UIImageFromJWZPlayerBundle(NSString *imageName) {
 
 
 static NSString *const kBarAnimationKey = @"kJWZPlayerControllerPlaybackControlsBarAnimationKey";
-static CGFloat const kBarHeight = 40.0;
+static CGFloat const kBarHeight = 36.0;
 
 @interface JWZPlayerPlaybackControls ()
 
 @property (nonatomic, weak) UIView *footBarView;
 @property (nonatomic, weak) UIButton *playButton;
 @property (nonatomic, weak) UIButton *zoomButton;
+@property (nonatomic, weak) _JWZTimeDisplayLabel *timeLabel;
 @property (nonatomic, weak) _JWZTimeDisplayLabel *durationLabel;
 @property (nonatomic, weak) _JWZProgressSlider *progressSlider;
 
@@ -114,7 +115,8 @@ static CGFloat const kBarHeight = 40.0;
     NSTimeInterval currentTime = self.playerController.currentTime;
     // NSLog(@"play progress: %f", currentTime);
     [self.progressSlider setValue:currentTime animated:YES];
-    self.durationLabel.duration = (NSUInteger)(self.progressSlider.maximumValue - currentTime);
+    self.timeLabel.duration = currentTime;
+    // self.durationLabel.duration = (NSUInteger)(self.progressSlider.maximumValue - currentTime);
 }
 
 - (void)tapAction:(UITapGestureRecognizer *)tap {
@@ -157,8 +159,8 @@ static CGFloat const kBarHeight = 40.0;
     });
 }
 
-- (void)playerController:(JWZPlayerController *)playerController didBufferMediaWithProgress:(CGFloat)progress {
-    [self.progressSlider.progressView setProgress:progress animated:YES];
+- (void)playerController:(JWZPlayerController *)playerController didLoadDuration:(NSTimeInterval)loadedDuration {
+    [self.progressSlider.progressView setProgress:(loadedDuration / self.progressSlider.maximumValue) animated:YES];
 }
 
 - (void)playerControllerDidStallPlaying:(JWZPlayerController *)playerController {
@@ -192,7 +194,7 @@ static CGFloat const kBarHeight = 40.0;
     
     // 底部控制条
     UIView *toolBar = [[UIView alloc] init];
-    toolBar.backgroundColor = [UIColor colorWithWhite:1.0 alpha:0.5];
+    toolBar.backgroundColor = [UIColor colorWithWhite:0.0 alpha:0.5];
     [self addSubview:toolBar];
     {
         toolBar.translatesAutoresizingMaskIntoConstraints = NO;
@@ -240,7 +242,7 @@ static CGFloat const kBarHeight = 40.0;
     [toolBar addSubview:progressWrapperView];
     {
         progressWrapperView.translatesAutoresizingMaskIntoConstraints = NO;
-        NSArray *consts1 = [NSLayoutConstraint constraintsWithVisualFormat:@"H:[playButton]-5@750-[progressWrapperView]-5@750-[zoomButton]" options:(NSLayoutFormatDirectionLeadingToTrailing) metrics:nil views:NSDictionaryOfVariableBindings(playButton, progressWrapperView, zoomButton)];
+        NSArray *consts1 = [NSLayoutConstraint constraintsWithVisualFormat:@"H:[playButton]-0@750-[progressWrapperView]-0@750-[zoomButton]" options:(NSLayoutFormatDirectionLeadingToTrailing) metrics:nil views:NSDictionaryOfVariableBindings(playButton, progressWrapperView, zoomButton)];
         [toolBar addConstraints:consts1];
         NSLayoutConstraint *const1 = [NSLayoutConstraint constraintWithItem:progressWrapperView attribute:(NSLayoutAttributeCenterX) relatedBy:(NSLayoutRelationEqual) toItem:toolBar attribute:(NSLayoutAttributeCenterX) multiplier:1.0 constant:0];
         [toolBar addConstraint:const1];
@@ -253,6 +255,14 @@ static CGFloat const kBarHeight = 40.0;
         [toolBar addConstraints:consts2];
     }
     
+    _JWZTimeDisplayLabel *timeLabel = [[_JWZTimeDisplayLabel alloc] init];
+    timeLabel.font                      = [UIFont systemFontOfSize:9.0];
+    timeLabel.textColor                 = [UIColor whiteColor];
+    timeLabel.text                      = @"00:00";
+    timeLabel.textAlignment             = NSTextAlignmentCenter;
+    timeLabel.adjustsFontSizeToFitWidth = YES;
+    [timeLabel setContentHuggingPriority:(UILayoutPriorityRequired) forAxis:(UILayoutConstraintAxisHorizontal)];
+    [progressWrapperView addSubview:timeLabel];
     // 进度条
     _JWZProgressSlider *progressSlider = [[_JWZProgressSlider alloc] init];
     progressSlider.userInteractionEnabled = NO; // 禁用拖动
@@ -267,20 +277,23 @@ static CGFloat const kBarHeight = 40.0;
     [progressWrapperView addSubview:progressSlider];
     _JWZTimeDisplayLabel *durationLabel = [[_JWZTimeDisplayLabel alloc] init];
     durationLabel.font                      = [UIFont systemFontOfSize:9.0];
-    durationLabel.textColor                 = [UIColor lightGrayColor];
+    durationLabel.textColor                 = [UIColor whiteColor];
     durationLabel.text                      = @"--:--";
     durationLabel.textAlignment             = NSTextAlignmentCenter;
     durationLabel.adjustsFontSizeToFitWidth = YES;
     [durationLabel setContentHuggingPriority:(UILayoutPriorityRequired) forAxis:(UILayoutConstraintAxisHorizontal)];
     [progressWrapperView addSubview:durationLabel];
     {
+        timeLabel.translatesAutoresizingMaskIntoConstraints = NO;
         progressSlider.translatesAutoresizingMaskIntoConstraints = NO;
         durationLabel.translatesAutoresizingMaskIntoConstraints = NO;
         NSLayoutConstraint *const1 = [NSLayoutConstraint constraintWithItem:progressSlider attribute:(NSLayoutAttributeCenterY) relatedBy:(NSLayoutRelationEqual) toItem:progressWrapperView attribute:(NSLayoutAttributeCenterY) multiplier:1.0 constant:0];
         [progressWrapperView addConstraint:const1];
-        NSLayoutConstraint *const2 = [NSLayoutConstraint constraintWithItem:durationLabel attribute:(NSLayoutAttributeCenterY) relatedBy:(NSLayoutRelationEqual) toItem:progressWrapperView attribute:(NSLayoutAttributeCenterY) multiplier:1.0 constant:0];
+        NSLayoutConstraint *const2 = [NSLayoutConstraint constraintWithItem:timeLabel attribute:(NSLayoutAttributeCenterY) relatedBy:(NSLayoutRelationEqual) toItem:progressWrapperView attribute:(NSLayoutAttributeCenterY) multiplier:1.0 constant:0];
         [progressWrapperView addConstraint:const2];
-        NSArray *consts1 = [NSLayoutConstraint constraintsWithVisualFormat:@"H:|[progressSlider]-5-[durationLabel]|" options:(NSLayoutFormatDirectionLeadingToTrailing) metrics:nil views:NSDictionaryOfVariableBindings(progressSlider, durationLabel)];
+        NSLayoutConstraint *const3 = [NSLayoutConstraint constraintWithItem:durationLabel attribute:(NSLayoutAttributeCenterY) relatedBy:(NSLayoutRelationEqual) toItem:progressWrapperView attribute:(NSLayoutAttributeCenterY) multiplier:1.0 constant:0];
+        [progressWrapperView addConstraint:const3];
+        NSArray *consts1 = [NSLayoutConstraint constraintsWithVisualFormat:@"H:|[timeLabel]-5-[progressSlider]-5-[durationLabel]|" options:(NSLayoutFormatDirectionLeadingToTrailing) metrics:nil views:NSDictionaryOfVariableBindings(timeLabel, progressSlider, durationLabel)];
         [progressWrapperView addConstraints:consts1];
     }
     
@@ -291,6 +304,7 @@ static CGFloat const kBarHeight = 40.0;
     _footBarView    = toolBar;
     _playButton     = playButton;
     _zoomButton     = zoomButton;
+    _timeLabel      = timeLabel;
     _progressSlider = progressSlider;
     _durationLabel  = durationLabel;
 }

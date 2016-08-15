@@ -14,14 +14,13 @@ typedef NS_ENUM(NSInteger, JWZPlayerStatus) {
     JWZPlayerStatusWaiting,  // 等待，已经开始播放，但是因为资源没有准备好，而处于等待的状态
     JWZPlayerStatusPlaying,  // 正在播放
     JWZPlayerStatusStalled,  // 缓冲，已经开始播放，资源正在缓冲
-    JWZPlayerStatusPaused    // 暂停
+    JWZPlayerStatusPaused  // 暂停
 };
 
 @protocol JWZPlayerDelegate;
-@class JWZPlayerItem;
 
 /**
- *  JWZPlayer 是将 AVPlayer 和 AVPlayerLayer 封装起来的视图。
+ *  类 JWZPlayer 设计的目的是将 AVPlayer 和 AVPlayerLayer 封装成易于使用的 UIView 视图。
  */
 @interface JWZPlayer : UIView
 
@@ -29,11 +28,6 @@ typedef NS_ENUM(NSInteger, JWZPlayerStatus) {
  *  播放器状态。
  */
 @property (nonatomic, readonly) JWZPlayerStatus status;
-
-/**
- *  播放器中当前的媒体资源。
- */
-@property (nonatomic, strong) JWZPlayerItem *media;
 
 /**
  *  接收播放器事件的代理。
@@ -73,6 +67,7 @@ typedef NS_ENUM(NSInteger, JWZPlayerStatus) {
  *  @return 已播放的时长，单位秒。
  */
 - (NSTimeInterval)currentTime;
+- (NSTimeInterval)duration;
 
 @end
 
@@ -110,20 +105,19 @@ typedef NS_ENUM(NSInteger, JWZPlayerStatus) {
 - (void)playerDidFinishPlaying:(JWZPlayer *)player;
 
 /**
- *  如果在播放过程中，播放或资源发生错误，此方法会被调用。
+ *  播放失败。
  *
- *  @param player 发生错误的 JWZPlayer 对象。
- *  @param error  错误信息。
+ *  @param player 播发器对象
  */
-- (void)player:(JWZPlayer *)player didFailToPlayWithError:(NSError *)error;
+- (void)playerDidFailToPlayToEndTime:(JWZPlayer *)player;
 
 /**
- *  这个方法用于跟踪缓冲进度。
+ *  这个方法用于跟踪缓冲进度。已完成的进度并非联系的。
  *
- *  @param player   触发事件的播放器 JWZPlayer 对象。
- *  @param progress 缓冲的进度。
+ *  @param player         触发事件的播放器 JWZPlayer 对象
+ *  @param loadedDuration 已完成的进度
  */
-- (void)player:(JWZPlayer *)player didBufferMediaWithProgress:(CGFloat)progress;
+- (void)player:(JWZPlayer *)player didLoadDuration:(NSTimeInterval)loadedDuration;
 
 /**
  *  如果播放过程中发生不连续的情况，此代理方法会被调用。
@@ -134,62 +128,4 @@ typedef NS_ENUM(NSInteger, JWZPlayerStatus) {
 
 
 @end
-
-#pragma makr - ==============
-#pragma mark - JWZPlayerItem
-#pragma makr - ==============
-
-/**
- *  JWZPlayerItem 的状态
- */
-typedef NS_ENUM(NSInteger, JWZPlayerItemStatus) {
-    JWZPlayerItemStatusUnavailable = 0, // 不可用
-    JWZPlayerItemStatusNewMedia,        // 新媒体载入
-    JWZPlayerItemStatusAvailable,       // 可以播放
-    JWZPlayerItemStatusBuffering        // 缓冲中
-};
-
-/**
- *  JWZPlayerItem 的作用是封装 AVPlayerItem 并监视其状态，并将其状态变化通过代理传递给 JWZPlayer 。
- */
-@interface JWZPlayerItem : NSObject
-
-/**
- *  资源状态
- */
-@property (nonatomic, readonly) JWZPlayerItemStatus status;
-
-/**
- *  媒体资源的链接。JWZPlayerItem 对象并不比较新旧 resourceURL 的实际链接是否相同。
- */
-@property (nonatomic, strong, readonly) NSURL *resourceURL;
-
-+ (instancetype)playerItemWithResourceURL:(NSURL *)resourceURL;
-- (instancetype)initWithResourceURL:(NSURL *)resourceURL NS_DESIGNATED_INITIALIZER;
-
-/**
- *  获取媒体资源时长的方法。
- *
- *  @return 媒体资源时长，以秒为单位。
- */
-- (NSTimeInterval)duration;
-
-/**
- *  替换正在播放的媒体资源。
- *
- *  @param resourceURL 媒体资源的URL
- */
-- (void)replaceMediaResourceWithURL:(NSURL *)resourceURL;
-
-/**
- *  媒体资源播放进度移动到开始。
- *
- *  @param completionHandler 如果执行操作时，已有正在进行的操作，block 会立即执行，finished = NO；
- *                           如果操作没有被别的操作所打断，block 在执行时，finished = YES 。
- */
-- (void)moveToStartTime:(void (^)(BOOL finished))completionHandler;
-
-@end
-
-
 
