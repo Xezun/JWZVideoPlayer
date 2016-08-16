@@ -1,8 +1,8 @@
 //
-//  JWZVideoPlayerView.h
-//  JWZVideoPlayer
+//  JWZPlayerView.h
+//  JWZPlayerView
 //
-//  Created by MJH on 16/3/13.
+//  Created by iMac on 16/3/28.
 //  Copyright © 2016年 MXZ. All rights reserved.
 //
 
@@ -22,7 +22,7 @@ typedef NS_ENUM(NSInteger, JWZPlayerStatus) {
 /**
  *  类 JWZPlayer 设计的目的是将 AVPlayer 和 AVPlayerLayer 封装成易于使用的 UIView 视图。
  */
-@interface JWZPlayer : UIView
+@interface JWZPlayerView : UIView
 
 /**
  *  播放器状态。
@@ -69,6 +69,8 @@ typedef NS_ENUM(NSInteger, JWZPlayerStatus) {
 - (NSTimeInterval)currentTime;
 - (NSTimeInterval)duration;
 
+- (void)moveToTime:(NSTimeInterval)time completion:(void (^)(BOOL finished))completionHandler;
+
 @end
 
 // JWZPlayer 事件代理
@@ -81,35 +83,35 @@ typedef NS_ENUM(NSInteger, JWZPlayerStatus) {
  *
  *  @param player 已经开始视频播放的 JWZPlayer 对象。
  */
-- (void)playerDidStartPlaying:(JWZPlayer *)player;
+- (void)playerDidStartPlaying:(JWZPlayerView *)player;
 
 /**
  *  如果是网络视频，播放有可能进入缓冲状态。
  *
  *  @param player 进入缓冲状态的 JWZPlayer 对象。
  */
-- (void)playerDidStallPlaying:(JWZPlayer *)player;
+- (void)playerDidStallPlaying:(JWZPlayerView *)player;
 
 /**
  *  如果缓冲完成，可以继续播放时，这个代理方法会被调用。
  *
  *  @param player 进入继续播放状态的 JWZPlayer 对象。
  */
-- (void)playerDidContinuePlaying:(JWZPlayer *)player;
+- (void)playerDidContinuePlaying:(JWZPlayerView *)player;
 
 /**
  *  如果播放资源完成，此代理方法会被调用。如果是手动停止，这个代理方法，不会被调用。
  *
  *  @param player 播放完成了的 JWZPlayer 对象。
  */
-- (void)playerDidFinishPlaying:(JWZPlayer *)player;
+- (void)playerDidFinishPlaying:(JWZPlayerView *)player;
 
 /**
  *  播放失败。
  *
  *  @param player 播发器对象
  */
-- (void)playerDidFailToPlayToEndTime:(JWZPlayer *)player;
+- (void)playerDidFailToPlayToEndTime:(JWZPlayerView *)player;
 
 /**
  *  这个方法用于跟踪缓冲进度。已完成的进度并非联系的。
@@ -117,14 +119,14 @@ typedef NS_ENUM(NSInteger, JWZPlayerStatus) {
  *  @param player         触发事件的播放器 JWZPlayer 对象
  *  @param loadedDuration 已完成的进度
  */
-- (void)player:(JWZPlayer *)player didLoadDuration:(NSTimeInterval)loadedDuration;
+- (void)player:(JWZPlayerView *)player didLoadDuration:(NSTimeInterval)loadedDuration;
 
 /**
  *  如果播放过程中发生不连续的情况，此代理方法会被调用。
  *
  *  @param player 触发事件的播放器 JWZPlayer 对象。
  */
-- (void)playerDidJumpTime:(JWZPlayer *)player;
+- (void)playerDidJumpTime:(JWZPlayerView *)player;
 
 
 @end

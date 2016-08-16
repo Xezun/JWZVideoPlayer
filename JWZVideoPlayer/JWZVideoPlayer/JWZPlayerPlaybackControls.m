@@ -1,20 +1,20 @@
 //
-//  JWZPlayerControllerPlaybackControls.m
-//  JWZVideoPlayer
+//  JWZPlayerPlaybackControls.m
+//  JWZPlayerPlaybackControls
 //
-//  Created by iMac on 16/7/21.
+//  Created by iMac on 16/3/28.
 //  Copyright © 2016年 MXZ. All rights reserved.
 //
 
 #import "JWZPlayerPlaybackControls.h"
 
-@interface _JWZProgressSlider : UISlider
+@interface _JWZPlayerPlaybackControlsProgressSlider : UISlider
 
 @property (nonatomic, weak) UIProgressView *progressView;
 
 @end
 
-@interface _JWZTimeDisplayLabel : UILabel
+@interface _JWZPlayerPlaybackControlsTimeDisplayLabel : UILabel
 
 @property (nonatomic) NSUInteger duration;
 
@@ -34,9 +34,9 @@ static CGFloat const kBarHeight = 36.0;
 @property (nonatomic, weak) UIView *footBarView;
 @property (nonatomic, weak) UIButton *playButton;
 @property (nonatomic, weak) UIButton *zoomButton;
-@property (nonatomic, weak) _JWZTimeDisplayLabel *timeLabel;
-@property (nonatomic, weak) _JWZTimeDisplayLabel *durationLabel;
-@property (nonatomic, weak) _JWZProgressSlider *progressSlider;
+@property (nonatomic, weak) _JWZPlayerPlaybackControlsTimeDisplayLabel *timeLabel;
+@property (nonatomic, weak) _JWZPlayerPlaybackControlsTimeDisplayLabel *durationLabel;
+@property (nonatomic, weak) _JWZPlayerPlaybackControlsProgressSlider *progressSlider;
 
 @property (nonatomic, weak) UIActivityIndicatorView *activityIndicatorView;
 
@@ -90,13 +90,13 @@ static CGFloat const kBarHeight = 36.0;
     if (button.isSelected) {
         button.selected = NO;
         [button setImage:UIImageFromJWZPlayerBundle(@"icon-btn-play-light") forState:(UIControlStateHighlighted)];
-        [self.playerController pause];
+        [self.playerController.playerView pause];
         self.playingProgressTimer.fireDate = [NSDate distantFuture];
         [self JWZPlayerControllerPlaybackControls_hideFootBarView:NO];
     } else {
         button.selected = YES;
         [button setImage:UIImageFromJWZPlayerBundle(@"icon-btn-pause-light") forState:(UIControlStateHighlighted | UIControlStateSelected)];
-        [self.playerController play];
+        [self.playerController.playerView play];
         self.playingProgressTimer.fireDate = [NSDate distantPast];
     }
 }
@@ -112,7 +112,7 @@ static CGFloat const kBarHeight = 36.0;
 }
 
 - (void)playingProgressTimerAction:(NSTimer *)timer {
-    NSTimeInterval currentTime = self.playerController.currentTime;
+    NSTimeInterval currentTime = self.playerController.playerView.currentTime;
     // NSLog(@"play progress: %f", currentTime);
     [self.progressSlider setValue:currentTime animated:YES];
     self.timeLabel.duration = currentTime;
@@ -132,7 +132,7 @@ static CGFloat const kBarHeight = 36.0;
 
 #pragma mark - <JWZPlayerControllerPlaybackControls>
 
-- (void)playerControllerWillStartPlaying:(JWZPlayerController *)playerController {
+- (void)playerControllerWillStartPlaying:(JWZPlayerViewController *)playerController {
     self.playButton.selected = YES;
     UIImage *image = UIImageFromJWZPlayerBundle(@"icon-btn-pause-light");
     [self.playButton setImage:image forState:(UIControlStateHighlighted | UIControlStateSelected)];
@@ -140,7 +140,7 @@ static CGFloat const kBarHeight = 36.0;
     [self.activityIndicatorView startAnimating];
 }
 
-- (void)playerController:(JWZPlayerController *)playerController didStartPlayingMediaWithDuration:(NSTimeInterval)duration {
+- (void)playerController:(JWZPlayerViewController *)playerController didStartPlayingMediaWithDuration:(NSTimeInterval)duration {
     [self.activityIndicatorView stopAnimating];
     // 显示时长
     self.durationLabel.duration = duration;
@@ -159,25 +159,25 @@ static CGFloat const kBarHeight = 36.0;
     });
 }
 
-- (void)playerController:(JWZPlayerController *)playerController didLoadDuration:(NSTimeInterval)loadedDuration {
+- (void)playerController:(JWZPlayerViewController *)playerController didLoadDuration:(NSTimeInterval)loadedDuration {
     [self.progressSlider.progressView setProgress:(loadedDuration / self.progressSlider.maximumValue) animated:YES];
 }
 
-- (void)playerControllerDidStallPlaying:(JWZPlayerController *)playerController {
+- (void)playerControllerDidStallPlaying:(JWZPlayerViewController *)playerController {
     [self.activityIndicatorView startAnimating];
 }
 
-- (void)playerControllerDidContinuePlaying:(JWZPlayerController *)playerController {
+- (void)playerControllerDidContinuePlaying:(JWZPlayerViewController *)playerController {
     [[self activityIndicatorView] stopAnimating];
 }
 
-- (void)playerControllerDidFailToPlay:(JWZPlayerController *)playerController {
+- (void)playerControllerDidFailToPlay:(JWZPlayerViewController *)playerController {
     [[self activityIndicatorView] stopAnimating];
     self.durationLabel.text = 0;
     [self playerControllerDidFinishPlaying:playerController];
 }
 
-- (void)playerControllerDidFinishPlaying:(JWZPlayerController *)playerController {
+- (void)playerControllerDidFinishPlaying:(JWZPlayerViewController *)playerController {
     [self JWZPlayerControllerPlaybackControls_hideFootBarView:NO];
     self.playButton.selected = NO;
     self.progressSlider.value = self.progressSlider.maximumValue;
@@ -255,7 +255,7 @@ static CGFloat const kBarHeight = 36.0;
         [toolBar addConstraints:consts2];
     }
     
-    _JWZTimeDisplayLabel *timeLabel = [[_JWZTimeDisplayLabel alloc] init];
+    _JWZPlayerPlaybackControlsTimeDisplayLabel *timeLabel = [[_JWZPlayerPlaybackControlsTimeDisplayLabel alloc] init];
     timeLabel.font                      = [UIFont systemFontOfSize:9.0];
     timeLabel.textColor                 = [UIColor whiteColor];
     timeLabel.text                      = @"00:00";
@@ -264,7 +264,7 @@ static CGFloat const kBarHeight = 36.0;
     [timeLabel setContentHuggingPriority:(UILayoutPriorityRequired) forAxis:(UILayoutConstraintAxisHorizontal)];
     [progressWrapperView addSubview:timeLabel];
     // 进度条
-    _JWZProgressSlider *progressSlider = [[_JWZProgressSlider alloc] init];
+    _JWZPlayerPlaybackControlsProgressSlider *progressSlider = [[_JWZPlayerPlaybackControlsProgressSlider alloc] init];
     progressSlider.userInteractionEnabled = NO; // 禁用拖动
     progressSlider.minimumValue           = 0;
     progressSlider.maximumTrackTintColor  = [UIColor clearColor];
@@ -275,7 +275,7 @@ static CGFloat const kBarHeight = 36.0;
     progressSlider.progressView.progressTintColor = [UIColor colorWithRed:0.4 green:0.7 blue:0.4 alpha:1.0];
     
     [progressWrapperView addSubview:progressSlider];
-    _JWZTimeDisplayLabel *durationLabel = [[_JWZTimeDisplayLabel alloc] init];
+    _JWZPlayerPlaybackControlsTimeDisplayLabel *durationLabel = [[_JWZPlayerPlaybackControlsTimeDisplayLabel alloc] init];
     durationLabel.font                      = [UIFont systemFontOfSize:9.0];
     durationLabel.textColor                 = [UIColor whiteColor];
     durationLabel.text                      = @"--:--";
@@ -376,12 +376,12 @@ static CGFloat const kBarHeight = 36.0;
 
 #pragma mark - Privite View Implementation
 
-@implementation _JWZProgressSlider
+@implementation _JWZPlayerPlaybackControlsProgressSlider
 
 - (instancetype)initWithFrame:(CGRect)frame {
     self = [super initWithFrame:frame];
     if (self != nil) {
-        [self _viewDidInitialize];
+        [self JWZ_viewDidInitialize];
     }
     return self;
 }
@@ -389,12 +389,12 @@ static CGFloat const kBarHeight = 36.0;
 - (instancetype)initWithCoder:(NSCoder *)aDecoder {
     self = [super initWithCoder:aDecoder];
     if (self != nil) {
-        [self _viewDidInitialize];
+        [self JWZ_viewDidInitialize];
     }
     return self;
 }
 
-- (void)_viewDidInitialize {
+- (void)JWZ_viewDidInitialize {
     UIProgressView *progressView = [[UIProgressView alloc] initWithProgressViewStyle:(UIProgressViewStyleDefault)];
     [self insertSubview:progressView atIndex:0];
     {
@@ -426,13 +426,13 @@ static CGFloat const kBarHeight = 36.0;
 @end
 
 
-@implementation _JWZTimeDisplayLabel
+@implementation _JWZPlayerPlaybackControlsTimeDisplayLabel
 
 - (void)setDuration:(NSUInteger)duration {
     if (_duration != duration) {
         _duration = duration;
         NSInteger second       = _duration % 60;    // 秒
-        NSInteger totalMinutes = duration / 60;     // 分钟数
+        NSInteger totalMinutes = _duration / 60;    // 分钟数
         NSInteger minute       = totalMinutes % 60; // 分钟
         if (totalMinutes < 60) {
             self.text = [NSString stringWithFormat:@"%02ld:%02ld", (long)minute, (long)second];

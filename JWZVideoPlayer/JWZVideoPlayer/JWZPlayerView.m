@@ -1,12 +1,12 @@
 //
-//  JWZVideoPlayerView.m
-//  JWZVideoPlayer
+//  JWZPlayerView.m
+//  JWZPlayerView
 //
-//  Created by MJH on 16/3/13.
+//  Created by iMac on 16/3/28.
 //  Copyright © 2016年 MXZ. All rights reserved.
 //
 
-#import "JWZPlayer.h"
+#import "JWZPlayerView.h"
 
 #ifdef JWZPlayerDebugLog
 #undef JWZPlayerDebugLog
@@ -38,7 +38,7 @@ static NSString *const kJWZPlayerObservedAVPlayerItemKeys[_JWZNumberOfKVOKeys] =
 #pragma mark - JWZPlayerView ()
 #pragma mark - ================
 
-IB_DESIGNABLE @interface JWZPlayer ()
+IB_DESIGNABLE @interface JWZPlayerView ()
 
 - (AVPlayer *)player;
 - (void)setPlayer:(AVPlayer *)player;
@@ -50,7 +50,7 @@ IB_DESIGNABLE @interface JWZPlayer ()
 
 #pragma mark - JWZPlayer Implementation
 
-@implementation JWZPlayer
+@implementation JWZPlayerView
 
 + (Class)layerClass {
     return [AVPlayerLayer class];
@@ -136,6 +136,7 @@ IB_DESIGNABLE @interface JWZPlayer ()
             break;
         case JWZPlayerStatusPaused: {
             [self JWZPlayer_registerNotificationForAVPlayerItem:[self currentItem]];
+            _status = JWZPlayerStatusPlaying;
             [[self player] play];
             break;
         }
@@ -171,8 +172,8 @@ IB_DESIGNABLE @interface JWZPlayer ()
             break;
         default: {
             [self JWZPlayer_unregisterNotificationForAVPlayerItem:[self currentItem]];
-            [[self player] pause];
             _status = JWZPlayerStatusPaused;
+            [[self player] pause];
             break;
         }
     }
@@ -184,12 +185,16 @@ IB_DESIGNABLE @interface JWZPlayer ()
             break;
         default: {
             [self JWZPlayer_unregisterNotificationForAVPlayerItem:[self currentItem]];
+            _status = JWZPlayerStatusStopped;
             [[self player] pause];
-            _status = JWZPlayerStatusPaused;
             [self JWZPlayer_moveToStartTime:NULL];
             break;
         }
     }
+}
+
+- (void)moveToTime:(NSTimeInterval)time completion:(void (^)(BOOL))completionHandler {
+    [[self currentItem] seekToTime:(CMTimeMake(time * 1000, 1000)) completionHandler:completionHandler];
 }
 
 #pragma mark - 属性

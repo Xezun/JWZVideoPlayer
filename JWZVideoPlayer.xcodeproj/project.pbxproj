@@ -15,8 +15,8 @@
 		3161DBAF1C954DB600F67B29 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3161DBAD1C954DB600F67B29 /* Main.storyboard */; };
 		3161DBB11C954DB600F67B29 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3161DBB01C954DB600F67B29 /* Assets.xcassets */; };
 		3161DBB41C954DB600F67B29 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3161DBB21C954DB600F67B29 /* LaunchScreen.storyboard */; };
-		3161DBBF1C954E0500F67B29 /* JWZPlayerController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3161DBBD1C954E0500F67B29 /* JWZPlayerController.m */; };
-		3161DBC31C954E3900F67B29 /* JWZPlayer.m in Sources */ = {isa = PBXBuildFile; fileRef = 3161DBC21C954E3900F67B29 /* JWZPlayer.m */; };
+		3161DBBF1C954E0500F67B29 /* JWZPlayerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3161DBBD1C954E0500F67B29 /* JWZPlayerViewController.m */; };
+		3161DBC31C954E3900F67B29 /* JWZPlayerView.m in Sources */ = {isa = PBXBuildFile; fileRef = 3161DBC21C954E3900F67B29 /* JWZPlayerView.m */; };
 		3161DBC61C954EDB00F67B29 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3161DBC41C954EDB00F67B29 /* AVFoundation.framework */; };
 		3161DBC71C954EDB00F67B29 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3161DBC51C954EDB00F67B29 /* AVKit.framework */; };
 		C41476691D3F5CB0006FE7FB /* JWZPlayer.bundle in Resources */ = {isa = PBXBuildFile; fileRef = C41476681D3F5CB0006FE7FB /* JWZPlayer.bundle */; };
@@ -39,10 +39,10 @@
 		3161DBB01C954DB600F67B29 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3161DBB31C954DB600F67B29 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		3161DBB51C954DB600F67B29 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		3161DBBC1C954E0500F67B29 /* JWZPlayerController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JWZPlayerController.h; sourceTree = "<group>"; };
-		3161DBBD1C954E0500F67B29 /* JWZPlayerController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JWZPlayerController.m; sourceTree = "<group>"; };
-		3161DBC11C954E3900F67B29 /* JWZPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JWZPlayer.h; sourceTree = "<group>"; };
-		3161DBC21C954E3900F67B29 /* JWZPlayer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JWZPlayer.m; sourceTree = "<group>"; };
+		3161DBBC1C954E0500F67B29 /* JWZPlayerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JWZPlayerViewController.h; sourceTree = "<group>"; };
+		3161DBBD1C954E0500F67B29 /* JWZPlayerViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JWZPlayerViewController.m; sourceTree = "<group>"; };
+		3161DBC11C954E3900F67B29 /* JWZPlayerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JWZPlayerView.h; sourceTree = "<group>"; };
+		3161DBC21C954E3900F67B29 /* JWZPlayerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JWZPlayerView.m; sourceTree = "<group>"; };
 		3161DBC41C954EDB00F67B29 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		3161DBC51C954EDB00F67B29 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		C41476681D3F5CB0006FE7FB /* JWZPlayer.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = JWZPlayer.bundle; sourceTree = "<group>"; };
@@ -123,12 +123,12 @@
 		3161DBBB1C954DE100F67B29 /* JWZVideoPlayer */ = {
 			isa = PBXGroup;
 			children = (
-				3161DBBC1C954E0500F67B29 /* JWZPlayerController.h */,
-				3161DBBD1C954E0500F67B29 /* JWZPlayerController.m */,
+				3161DBBC1C954E0500F67B29 /* JWZPlayerViewController.h */,
+				3161DBBD1C954E0500F67B29 /* JWZPlayerViewController.m */,
 				C428E2691D405A1E0019D21C /* JWZPlayerPlaybackControls.h */,
 				C428E26A1D405A1E0019D21C /* JWZPlayerPlaybackControls.m */,
-				3161DBC11C954E3900F67B29 /* JWZPlayer.h */,
-				3161DBC21C954E3900F67B29 /* JWZPlayer.m */,
+				3161DBC11C954E3900F67B29 /* JWZPlayerView.h */,
+				3161DBC21C954E3900F67B29 /* JWZPlayerView.m */,
 				C41476681D3F5CB0006FE7FB /* JWZPlayer.bundle */,
 			);
 			path = JWZVideoPlayer;
@@ -219,8 +219,8 @@
 				3161DBA91C954DB600F67B29 /* AppDelegate.m in Sources */,
 				3161DBA61C954DB600F67B29 /* main.m in Sources */,
 				314BE9051C96D89000519CA8 /* DALabeledCircularProgressView.m in Sources */,
-				3161DBBF1C954E0500F67B29 /* JWZPlayerController.m in Sources */,
-				3161DBC31C954E3900F67B29 /* JWZPlayer.m in Sources */,
+				3161DBBF1C954E0500F67B29 /* JWZPlayerViewController.m in Sources */,
+				3161DBC31C954E3900F67B29 /* JWZPlayerView.m in Sources */,
 				C428E26B1D405A1E0019D21C /* JWZPlayerPlaybackControls.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
