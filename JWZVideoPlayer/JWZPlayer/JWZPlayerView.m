@@ -1,9 +1,9 @@
 //
 //  JWZPlayerView.m
-//  JWZPlayerView
+//  JWZPlayer
 //
-//  Created by iMac on 16/3/28.
-//  Copyright © 2016年 MXZ. All rights reserved.
+//  Created by J. W. Z. on 16/3/28.
+//  Copyright © 2016年 J. W. Z.. All rights reserved.
 //
 
 #import "JWZPlayerView.h"

@@ -1,9 +1,9 @@
 //
 //  JWZPlayerPlaybackControls.m
-//  JWZPlayerPlaybackControls
+//  JWZPlayer
 //
-//  Created by iMac on 16/3/28.
-//  Copyright © 2016年 MXZ. All rights reserved.
+//  Created by J. W. Z. on 16/3/28.
+//  Copyright © 2016年 J. W. Z.. All rights reserved.
 //
 
 #import "JWZPlayerPlaybackControls.h"
@@ -20,8 +20,8 @@
 
 @end
 
-static UIImage *UIImageFromJWZPlayerBundle(NSString *imageName) {
-    NSString *imageFullName = [NSString stringWithFormat:@"JWZPlayer.bundle/%@", imageName];
+static UIImage *UIImageFromJWZPlayerResourceBundle(NSString *imageName) {
+    NSString *imageFullName = [NSString stringWithFormat:@"JWZPlayerResource.bundle/%@", imageName];
     return [UIImage imageNamed:imageFullName];
 }
 
@@ -89,13 +89,13 @@ static CGFloat const kBarHeight = 36.0;
 - (void)playButtonAction:(UIButton *)button {
     if (button.isSelected) {
         button.selected = NO;
-        [button setImage:UIImageFromJWZPlayerBundle(@"icon-btn-play-light") forState:(UIControlStateHighlighted)];
+        [button setImage:UIImageFromJWZPlayerResourceBundle(@"icon-btn-play-light") forState:(UIControlStateHighlighted)];
         [self.playerController.playerView pause];
         self.playingProgressTimer.fireDate = [NSDate distantFuture];
         [self JWZPlayerControllerPlaybackControls_hideFootBarView:NO];
     } else {
         button.selected = YES;
-        [button setImage:UIImageFromJWZPlayerBundle(@"icon-btn-pause-light") forState:(UIControlStateHighlighted | UIControlStateSelected)];
+        [button setImage:UIImageFromJWZPlayerResourceBundle(@"icon-btn-pause-light") forState:(UIControlStateHighlighted | UIControlStateSelected)];
         [self.playerController.playerView play];
         self.playingProgressTimer.fireDate = [NSDate distantPast];
     }
@@ -134,7 +134,7 @@ static CGFloat const kBarHeight = 36.0;
 
 - (void)playerControllerWillStartPlaying:(JWZPlayerViewController *)playerController {
     self.playButton.selected = YES;
-    UIImage *image = UIImageFromJWZPlayerBundle(@"icon-btn-pause-light");
+    UIImage *image = UIImageFromJWZPlayerResourceBundle(@"icon-btn-pause-light");
     [self.playButton setImage:image forState:(UIControlStateHighlighted | UIControlStateSelected)];
     self.durationLabel.duration = 0;
     [self.activityIndicatorView startAnimating];
@@ -206,9 +206,9 @@ static CGFloat const kBarHeight = 36.0;
     
     // 播放按钮
     UIButton *playButton = [[UIButton alloc] init];
-    [playButton setImage:UIImageFromJWZPlayerBundle(@"icon-btn-play") forState:(UIControlStateNormal)];
-    [playButton setImage:UIImageFromJWZPlayerBundle(@"icon-btn-play-light") forState:(UIControlStateHighlighted)];
-    [playButton setImage:UIImageFromJWZPlayerBundle(@"icon-btn-pause") forState:(UIControlStateSelected)];
+    [playButton setImage:UIImageFromJWZPlayerResourceBundle(@"icon-btn-play") forState:(UIControlStateNormal)];
+    [playButton setImage:UIImageFromJWZPlayerResourceBundle(@"icon-btn-play-light") forState:(UIControlStateHighlighted)];
+    [playButton setImage:UIImageFromJWZPlayerResourceBundle(@"icon-btn-pause") forState:(UIControlStateSelected)];
     [toolBar addSubview:playButton];
     {
         playButton.translatesAutoresizingMaskIntoConstraints = NO;
@@ -223,8 +223,8 @@ static CGFloat const kBarHeight = 36.0;
     
     // 全屏按钮
     UIButton *zoomButton = [[UIButton alloc] init];
-    [zoomButton setImage:UIImageFromJWZPlayerBundle(@"icon-btn-zoomin") forState:(UIControlStateNormal)];
-    [zoomButton setImage:UIImageFromJWZPlayerBundle(@"icon-btn-zoomout") forState:(UIControlStateSelected)];
+    [zoomButton setImage:UIImageFromJWZPlayerResourceBundle(@"icon-btn-zoomin") forState:(UIControlStateNormal)];
+    [zoomButton setImage:UIImageFromJWZPlayerResourceBundle(@"icon-btn-zoomout") forState:(UIControlStateSelected)];
     [toolBar addSubview:zoomButton];
     {
         zoomButton.translatesAutoresizingMaskIntoConstraints = NO;
