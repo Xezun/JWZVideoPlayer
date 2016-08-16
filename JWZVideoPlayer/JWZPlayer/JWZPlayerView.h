@@ -14,7 +14,7 @@ typedef NS_ENUM(NSInteger, JWZPlayerStatus) {
     JWZPlayerStatusWaiting,  // 等待，已经开始播放，但是因为资源没有准备好，而处于等待的状态
     JWZPlayerStatusPlaying,  // 正在播放
     JWZPlayerStatusStalled,  // 缓冲，已经开始播放，资源正在缓冲
-    JWZPlayerStatusPaused  // 暂停
+    JWZPlayerStatusPaused    // 暂停
 };
 
 @protocol JWZPlayerDelegate;

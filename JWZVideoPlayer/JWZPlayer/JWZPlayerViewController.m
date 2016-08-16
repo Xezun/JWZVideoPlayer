@@ -240,15 +240,21 @@ static NSTimeInterval const kJWZPlayerViewControllerAnimationDefaultDuration = 0
             } completion:^(BOOL finished) {
                 // Present播放器控制器
                 // NSLog(@"frame: %@", NSStringFromCGRect(self.view.frame));
-                [viewController presentViewController:self animated:NO completion:NULL];
+                [viewController presentViewController:self animated:NO completion:^{
+                    self.prefersStatusBarHidden = YES;
+                }];
             }];
         } else {
-            [viewController presentViewController:self animated:NO completion:NULL];
+            [viewController presentViewController:self animated:NO completion:^{
+                self.prefersStatusBarHidden = YES;
+            }];
         }
     } else if (self.presentingViewController != viewController) { // 已经是全屏状态
         if (self.view.window != viewController.view.window) { // 只有在不同的 window 上才能操作
             [self.presentingViewController dismissViewControllerAnimated:NO completion:^{
-                [viewController presentViewController:self animated:animated completion:NULL];
+                [viewController presentViewController:self animated:animated completion:^{
+                    self.prefersStatusBarHidden = YES;
+                }];
             }];
         }
     }
@@ -351,7 +357,6 @@ static NSTimeInterval const kJWZPlayerViewControllerAnimationDefaultDuration = 0
 }
 
 - (void)player:(JWZPlayerView *)player didLoadDuration:(NSTimeInterval)loadedDuration {
-     NSLog(@"%s, %f", __func__, loadedDuration);
     if (self.playbackControls != nil && [self.playbackControls respondsToSelector:@selector(playerController:didLoadDuration:)]) {
         [self.playbackControls playerController:self didLoadDuration:loadedDuration];
     }

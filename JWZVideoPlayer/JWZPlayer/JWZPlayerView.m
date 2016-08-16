@@ -13,7 +13,7 @@
 #endif
 
 #if DEBUG
-#define JWZPlayerDebugLog(...) NSLog(__VA_ARGS__)
+#define JWZPlayerDebugLog(...) NSLog(@"JWZPlayerDebugLog: {\n\tFILE: %@, \n\tLINE: %03d, \n\tFUNC: %s, \n\tINFO: %@\n}\n", [[NSString stringWithUTF8String:__FILE__] lastPathComponent], __LINE__, __func__, [NSString stringWithFormat:__VA_ARGS__])
 #else
 #define JWZPlayerDebugLog(...);
 #endif
@@ -57,6 +57,7 @@ IB_DESIGNABLE @interface JWZPlayerView ()
 }
 
 - (void)dealloc {
+    [self stop];  // 解除通知
     AVPlayerItem *currentItem = [[self player] currentItem];
     if (currentItem != nil) {
         [self JWZPlayer_unregisterNotificationForAVPlayerItem:currentItem];
@@ -132,9 +133,11 @@ IB_DESIGNABLE @interface JWZPlayerView ()
         case JWZPlayerStatusStalled:
         case JWZPlayerStatusWaiting:
         case JWZPlayerStatusPlaying:
+            JWZPlayerDebugLog(@"JWZPlayerStatusStalled、JWZPlayerStatusWaiting、JWZPlayerStatusPlaying");
             // 这三种状态不需要取做任何操作
             break;
         case JWZPlayerStatusPaused: {
+            JWZPlayerDebugLog(@"JWZPlayerStatusPaused");
             [self JWZPlayer_registerNotificationForAVPlayerItem:[self currentItem]];
             _status = JWZPlayerStatusPlaying;
             [[self player] play];
@@ -142,12 +145,15 @@ IB_DESIGNABLE @interface JWZPlayerView ()
         }
         case JWZPlayerStatusStopped: {
             if ([self error] != nil) {
+                JWZPlayerDebugLog(@"JWZPlayerStatusStopped Error");
                 AVURLAsset *urlAsset = (AVURLAsset *)[self currentItem].asset;
                 if ([urlAsset isMemberOfClass:[AVURLAsset class]]) {
-                    [self replaceCurrentMediaWithURL:urlAsset.URL];
+                    NSURL *mediaURL = [NSURL URLWithString:urlAsset.URL.absoluteString];
+                    [self replaceCurrentMediaWithURL:mediaURL];
                     [self play];
                 }
             } else {
+                JWZPlayerDebugLog(@"JWZPlayerStatusStopped no Error");
                 [self JWZPlayer_registerNotificationForAVPlayerItem:[self currentItem]];
                 _status = JWZPlayerStatusWaiting;
                 if ([[self currentItem] isPlaybackLikelyToKeepUp]) {
@@ -165,7 +171,7 @@ IB_DESIGNABLE @interface JWZPlayerView ()
 }
 
 - (void)pause {
-    switch (self.status) {
+    switch (_status) {
         case JWZPlayerStatusStopped:
         case JWZPlayerStatusPaused:
             // 处于这两种状态时，不需要进行任何操作
@@ -180,7 +186,7 @@ IB_DESIGNABLE @interface JWZPlayerView ()
 }
 
 - (void)stop {
-    switch (self.status) {
+    switch (_status) {
         case JWZPlayerStatusStopped:
             break;
         default: {
@@ -252,7 +258,8 @@ IB_DESIGNABLE @interface JWZPlayerView ()
 
 // 播放完成
 - (void)JWZPlayer_AVPlayerItemDidPlayToEndTime:(NSNotification *)notification {
-    if (notification.object == [self currentItem]) {
+    JWZPlayerDebugLog(@"Notification");
+    if (notification.object == [self currentItem] && _status != JWZPlayerStatusStopped) {
         [self JWZPlayer_unregisterNotificationForAVPlayerItem:[self currentItem]];
         [[self player] pause];
         _status = JWZPlayerStatusStopped;
@@ -264,7 +271,8 @@ IB_DESIGNABLE @interface JWZPlayerView ()
 
 // 播放失败
 - (void)JWZPlayer_AVPlayerItemFailedToPlayToEndTime:(NSNotification *)notification {
-    if (notification.object == [self currentItem]) {
+    JWZPlayerDebugLog(@"Notification");
+    if (notification.object == [self currentItem] && _status != JWZPlayerStatusStopped) {
         [self JWZPlayer_unregisterNotificationForAVPlayerItem:[self currentItem]];
         [[self player] pause];
         _status = JWZPlayerStatusStopped;
@@ -276,7 +284,8 @@ IB_DESIGNABLE @interface JWZPlayerView ()
 
 // 播放停滞了
 - (void)JWZPlayer_AVPlayerItemPlaybackStalled:(NSNotification *)notification {
-    if (notification.object == [self currentItem]) {
+    JWZPlayerDebugLog(@"Notification");
+    if (notification.object == [self currentItem] && _status != JWZPlayerStatusStalled) {
         [[self player] pause];
         _status = JWZPlayerStatusStalled;
         if (self.delegate != nil && [self.delegate respondsToSelector:@selector(playerDidStallPlaying:)]) {
@@ -287,6 +296,7 @@ IB_DESIGNABLE @interface JWZPlayerView ()
 
 // 播放时间跳跃了
 - (void)JWZPlayer_AVPlayerItemTimeJumped:(NSNotification *)notification {
+    JWZPlayerDebugLog(@"Notification");
     if (notification.object == [self currentItem]) {
         if (self.delegate != nil && [self.delegate respondsToSelector:@selector(playerDidJumpTime:)]) {
             [self.delegate playerDidJumpTime:self];
@@ -297,11 +307,11 @@ IB_DESIGNABLE @interface JWZPlayerView ()
 #pragma mark - KVO 方法
 
 - (void)JWZPlayer_AVPlayerItemStatusAvailable {
-    JWZPlayerDebugLog(@"Media：JWZPlayerItemStatusAvailable");
+    JWZPlayerDebugLog(@"KVO");
     switch (self.status) {
         case JWZPlayerStatusStalled: { // 当前是缓冲状态，直接进入播放状态
             _status = JWZPlayerStatusPlaying;
-            [[self player] play];
+            [self.player play];
             if (_delegate != nil && [_delegate respondsToSelector:@selector(playerDidContinuePlaying:)]) {
                 [_delegate playerDidContinuePlaying:self];
             }
@@ -321,16 +331,19 @@ IB_DESIGNABLE @interface JWZPlayerView ()
 }
 
 - (void)JWZPlayer_AVPlayerItemStatusBuffering {
-    JWZPlayerDebugLog(@"Media：JWZPlayerItemStatusBuffering");
+    JWZPlayerDebugLog(@"KVO");
     // [self JWZPlayer_AVPlayerDidStallPlaying];
 }
 
 - (void)JWZPlayer_AVPlayerItemStatusFailed {
-    JWZPlayerDebugLog(@"Media：JWZPlayerItemStatusUnavailable");
-    _status = JWZPlayerStatusStopped;
-    [[self player] pause];
-    if (self.delegate != nil && [self.delegate respondsToSelector:@selector(playerDidFailToPlayToEndTime:)]) {
-        [self.delegate playerDidFailToPlayToEndTime:self];
+    JWZPlayerDebugLog(@"KVO");
+    if (_status != JWZPlayerStatusStopped) {
+        [self JWZPlayer_unregisterNotificationForAVPlayerItem:[self currentItem]];
+        _status = JWZPlayerStatusStopped;
+        [[self player] pause];
+        if (self.delegate != nil && [self.delegate respondsToSelector:@selector(playerDidFailToPlayToEndTime:)]) {
+            [self.delegate playerDidFailToPlayToEndTime:self];
+        }
     }
 }
 
